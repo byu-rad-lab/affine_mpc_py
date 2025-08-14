@@ -1,0 +1,44 @@
+[build-system]
+requires = ["scikit-build-core", "pybind11", "pybind11-stubgen", "black"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "affine_mpc"
+version = "1.0.0"
+dependencies = [
+    "numpy",
+    # "matplotlib",
+]
+authors = [
+    {name="Mathew Haskell", email="mhaskell9@gmail.com"}
+]
+description="Python bindings for the affine_mpc library"
+readme="README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Private :: Do Not Upload",
+]
+keywords = ["affine mpc", "mpc", "model predictive control"]
+
+# Install these with `pip install .[dev]`
+[project.optional-dependencies]
+dev = [
+    "pytest",
+]
+# build = [
+#     "pybind11-stubgen",
+#     "black",
+# ]
+
+# # This lets pip know what folders should be included / ignored
+# # when the package is installed.
+# [tool.setuptools.packages.find]
+# where = ["python"]
+#
+# # Copy the python bindings to pip install directory, e.g. site/dist-packages
+# [tool.setuptools.package-data]
+# affine_mpc_py = ["*.so"]

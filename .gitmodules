@@ -1,0 +1,3 @@
+[submodule "lib/affine_mpc_dev"]
+	path = lib/affine_mpc_dev
+	url = github:byu-rad-lab/affine_mpc_dev

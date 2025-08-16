@@ -1,5 +1,11 @@
+import tempfile
+import os
+from time import perf_counter
+
 import numpy as np
 import affine_mpc as ampc
+
+import plot
 
 
 def main():
@@ -9,10 +15,12 @@ def main():
         len_horizon=10,
         num_control_points=3,
         use_input_cost=True,
-        use_slew_rate=True,
+        # use_slew_rate=True,
     )
 
-    logger = ampc.MPCLogger(msd_mpc, "/tmp/ampc_example_py")
+    tmp = tempfile.gettempdir()
+    save_dir = os.path.join(tmp, "ampc", "example")
+    logger = ampc.MPCLogger(msd_mpc, save_dir)
 
     A = np.array([[0, 1], [-0.6, -0.1]])
     B = np.array([0, 0.2])
@@ -24,11 +32,11 @@ def main():
     u_max = np.ones(1) * 3
     msd_mpc.setInputLimits(u_min, u_max)
 
-    slew = np.ones(1)
-    msd_mpc.setSlewRate(slew)
+    # slew = np.ones(1)
+    # msd_mpc.setSlewRate(slew)
 
-    Q_diag = np.array([1, 0.11])
-    R_diag = np.array([0.0001])
+    Q_diag = np.array([1, 0.1])
+    R_diag = np.array([0.00001])
     msd_mpc.setWeights(Q_diag, R_diag)
 
     x_goal = np.array([1.0, 0])
@@ -40,13 +48,15 @@ def main():
 
     xk = np.zeros(2)
     t = 0.0
-    tf = 5.0
+    tf = 15.0
     while t < tf:
+        start = perf_counter()
         solved = msd_mpc.solve(xk)
         if not solved:
             print("Did not solve :(")
         uk = msd_mpc.getNextInput()
-        logger.logPreviousSolve(t, ts, xk)
+        elapsed = perf_counter() - start
+        logger.logPreviousSolve(t, ts, xk, elapsed)
         xk = msd_mpc.propagateModel(xk, uk)
         t += ts
 
@@ -55,3 +65,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    plot.main()

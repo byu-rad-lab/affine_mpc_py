@@ -22,11 +22,10 @@ else()
 endif()
 
 set(PYBIND11_FINDPYTHON ON)
-# find_package(Python 3.13 COMPONENTS Interpreter Development REQUIRED)
+# find_package(Python COMPONENTS Interpreter Development REQUIRED)
 find_package(pybind11 CONFIG REQUIRED)
 message(STATUS "Found pybind11: ${pybind11_VERSION}")
 
-# add_subdirectory(lib/affine_mpc_dev)
 include(FetchContent)
 FetchContent_Declare(
   ampc_ext
@@ -72,18 +71,3 @@ install(CODE "execute_process(COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOUR
 install(CODE "execute_process(COMMAND black --pyi ${TMP}/stubs/affine_mpc)")
 # install(CODE "execute_process(COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/custom_stubgen.py ${TMP})")
 install(FILES ${TMP}/stubs/affine_mpc/_bindings.pyi DESTINATION ${SKBUILD_PLATLIB_DIR}/affine_mpc)
-
-
-# add_custom_command(TARGET _bindings POST_BUILD
-#   COMMAND ${CMAKE_COMMAND} -E echo "Running post-build script for _bindings..."
-#   COMMAND ${CMAKE_COMMAND} -E echo "PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}:$ENV{PYTHONPATH}"
-#   COMMAND ${CMAKE_COMMAND} -E echo "venv=$ENV{VIRTUAL_ENV}"
-#   # COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/custom_stubgen.py ${SKBUILD_PLATLIB_DIR}
-#   COMMAND PYTHONPATH="${CMAKE_CURRENT_BINARY_DIR}:$ENV{PYTHONPATH}" python
-#   ${CMAKE_CURRENT_SOURCE_DIR}/custom_stubgen.py /tmp
-#   # COMMAND PYTHONPATH="${CMAKE_CURRENT_BINARY_DIR}:$ENV{PYTHONPATH}" python ${CMAKE_CURRENT_SOURCE_DIR}/custom_stubgen.py ${CMAKE_CURRENT_BINARY_DIR}
-#   # COMMAND ls -l ${CMAKE_CURRENT_BINARY_DIR}/stubs/affine_mpc
-#   # COMMAND cp ${CMAKE_CURRENT_BINARY_DIR}/stubs/affine_mpc/_bindings.pyi ${SKBUILD_PLATLIB_DIR}/affine_mpc/.
-#   # COMMAND cp ${CMAKE_CURRENT_BINARY_DIR}/stubs/affine_mpc/_bindings.pyi /tmp/.
-#   COMMAND ${CMAKE_COMMAND} -E echo "Post-build script complete."
-# )

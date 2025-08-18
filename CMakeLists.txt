@@ -104,7 +104,7 @@ endif()
 # install(CODE "execute_process(COMMAND pybind11-stubgen -o ${CMAKE_CURRENT_BINARY_DIR}/stubs affine_mpc --numpy-array-use-type-var)")
 # install(CODE "execute_process(COMMAND ls ${CMAKE_CURRENT_BINARY_DIR}/stubs/affine_mpc)")
 
-# set(STUB_DIR "${TMP}/stubs")
+set(STUB_DIR "${TMP}/stubs")
 # set(STUB_DIR "${SKBUILD_PLATLIB_DIR}/stubs")
 
 # install(CODE "execute_process(COMMAND PYTHONPATH=${SKBUILD_PLATLIB_DIR} pybind11-stubgen -o ${STUB_DIR} affine_mpc --numpy-array-use-type-var)")

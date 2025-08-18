@@ -1,5 +1,5 @@
 [build-system]
-requires = ["scikit-build-core", "pybind11", "pybind11-stubgen", "black"]
+requires = ["scikit-build-core", "pybind11[global]", "numpy", "pybind11-stubgen", "black"]
 build-backend = "scikit_build_core.build"
 
 [project]
@@ -29,10 +29,14 @@ keywords = ["affine mpc", "mpc", "model predictive control"]
 dev = [
     "pytest",
 ]
-# build = [
-#     "pybind11-stubgen",
-#     "black",
-# ]
+build = [
+    "pybind11[global]",
+]
+stubs = [
+    "numpy",
+    "pybind11-stubgen",
+    "black",
+]
 
 # # This lets pip know what folders should be included / ignored
 # # when the package is installed.

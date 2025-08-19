@@ -38,11 +38,6 @@ stubs = [
     "black",
 ]
 
-# # This lets pip know what folders should be included / ignored
-# # when the package is installed.
-# [tool.setuptools.packages.find]
-# where = ["python"]
-#
-# # Copy the python bindings to pip install directory, e.g. site/dist-packages
-# [tool.setuptools.package-data]
-# affine_mpc_py = ["*.so"]
+[tool.scikit-build.cmake.define]
+CMAKE_BUILD_TYPE = "Release"
+# USE_SHARED_LIBRARIES = "ON"

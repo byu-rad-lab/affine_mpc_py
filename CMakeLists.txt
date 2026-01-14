@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.28)
 project(affine_mpc_py LANGUAGES CXX)
 set(CMAKE_POLICY_VERSION_MINIMUM 3.10)
 
@@ -32,7 +32,6 @@ set_target_properties(_bindings PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_DIR}/affine_mpc
 )
 if(${USE_SHARED_LIBRARIES})
-  message(FATAL_ERROR "Shared libraries not yet supported for affine_mpc")
   target_link_libraries(_bindings PUBLIC affine_mpc)
   set_target_properties(_bindings PROPERTIES
     INSTALL_RPATH "$ORIGIN"

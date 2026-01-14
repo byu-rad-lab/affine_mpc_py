@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 3.15)
-project(affine_mpc_py LANGUAGES CXX C)
-set(CMAKE_POLICY_VERSION_MINIMUM 3.15)
+project(affine_mpc_py LANGUAGES CXX)
+set(CMAKE_POLICY_VERSION_MINIMUM 3.10)
 
 set(CMAKE_BUILD_TYPE Release)
+set(BUILD_EXAMPLE OFF)
+set(BUILD_TESTS OFF)
 
 option(GENERATE_STUBS "Whether or not to generate stub files for compiled bindings")
 option(USE_SHARED_LIBRARIES "Whether or not to compile shared vs static libraries")
@@ -13,31 +15,9 @@ else()
   set(OUTPUT_DIR "${SKBUILD_PLATLIB_DIR}")
 endif()
 
-if(WIN32)
-  string(REPLACE "\\" "/" TMP $ENV{TEMP})
-  
-  # help Windows find pybind11 installation from venv
-  if("${pybind11_DIR}" STREQUAL "" OR "${pybind11_DIR}" STREQUAL "pybind11_DIR-NOTFOUND")
-    string(REPLACE "\\" "/" PYDIR "$ENV{VIRTUAL_ENV}/share/cmake/pybind11")
-    if(EXISTS "${PYDIR}")
-      set(pybind11_DIR "${PYDIR}")
-      message(STATUS "pybind11_DIR: ${pybind11_DIR}")
-    else()
-      message(STATUS "pybind11_DIR not found in venv - try `pip install pybind11[global]`")
-    endif()
-  endif()
-else()
-  set(TMP "/tmp")
-endif()
-
-set(PYBIND11_FINDPYTHON ON)
-find_package(Python COMPONENTS Interpreter Development REQUIRED)
-find_package(pybind11 3.0.0 CONFIG REQUIRED)
-message(STATUS "Found pybind11: ${pybind11_VERSION}")
-
 include(FetchContent)
+include(cmake/extern_pybind11.cmake)
 include(cmake/extern_ampc.cmake)
-include(cmake/extern_osqp.cmake)
 
 pybind11_add_module(_bindings MODULE
   src/bindings/affine_mpc_py_module.cpp
@@ -52,6 +32,7 @@ set_target_properties(_bindings PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_DIR}/affine_mpc
 )
 if(${USE_SHARED_LIBRARIES})
+  message(FATAL_ERROR "Shared libraries not yet supported for affine_mpc")
   target_link_libraries(_bindings PUBLIC affine_mpc)
   set_target_properties(_bindings PROPERTIES
     INSTALL_RPATH "$ORIGIN"
@@ -73,9 +54,27 @@ if("${Python3_EXECUTABLE}" STREQUAL "")
   set(Python3_EXECUTABLE "$ENV{VIRTUAL_ENV}/bin/python")
 endif()
 
+if(WIN32)
+  # on Windows, check TEMP then TMP environment variables
+  if(DEFINED $ENV{TEMP})
+    string(REPLACE "\\" "/" TMP $ENV{TEMP})
+  elseif(DEFINED $ENV{TMP})
+    string(REPLACE "\\" "/" TMP $ENV{TMP})
+  else()
+    set(TMP "C:/Temp") # default fallback
+  endif()
+else()
+  # on Unix/Linux/Mac, check TMPDIR, then fallback to /tmp
+  if(DEFINED $ENV{TMPDIR})
+    set(TMP $ENV{TMPDIR})
+  else()
+    set(TMP "/tmp")
+  endif()
+endif()
 set(STUB_DIR "${TMP}/stubs")
 
 if(${GENERATE_STUBS})
+
   add_custom_command(TARGET _bindings POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E echo "Running post-build script for _bindings..."
 

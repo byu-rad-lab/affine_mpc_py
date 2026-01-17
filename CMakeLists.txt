@@ -1,13 +1,8 @@
 cmake_minimum_required(VERSION 3.28)
 project(affine_mpc_py LANGUAGES CXX)
-set(CMAKE_POLICY_VERSION_MINIMUM 3.10)
 
-set(CMAKE_BUILD_TYPE Release)
-set(BUILD_EXAMPLE OFF)
-set(BUILD_TESTS OFF)
-
-option(GENERATE_STUBS "Whether or not to generate stub files for compiled bindings")
-option(USE_SHARED_LIBRARIES "Whether or not to compile shared vs static libraries")
+# for manual builds, scikit will install and this isn't needed
+option(GENERATE_STUBS "Generate stub files for compiled bindings" OFF)
 
 if("${SKBUILD_PLATLIB_DIR}" STREQUAL "")
   set(OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}")
@@ -31,27 +26,35 @@ set_target_properties(_bindings PROPERTIES
   LIBRARY_OUTPUT_DIRECTORY ${OUTPUT_DIR}/affine_mpc
   RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_DIR}/affine_mpc
 )
-if(${USE_SHARED_LIBRARIES})
-  target_link_libraries(_bindings PUBLIC affine_mpc)
+target_link_libraries(_bindings PRIVATE affine_mpc::affine_mpc)
+
+if(${BUILD_SHARED_LIBS})
+  # set runtime path to look in the same directory as the bindings so that it
+  # can find the shared library dependencies
   set_target_properties(_bindings PROPERTIES
-    INSTALL_RPATH "$ORIGIN"
-    BUILD_WITH_INSTALL_RPATH TRUE
+    INSTALL_RPATH "\$ORIGIN"
+    BUILD_RPATH_USE_ORIGIN TRUE
   )
   install(TARGETS _bindings osqp affine_mpc
+  # install(TARGETS osqp affine_mpc
     LIBRARY DESTINATION ${OUTPUT_DIR}/affine_mpc
     RUNTIME DESTINATION ${OUTPUT_DIR}/affine_mpc
   )
+  # if targets have version/soversion properties, TODO: handle symlinks
+  # install(TARGETS osqp affine_mpc
+  #   LIBRARY DESTINATION ${OUTPUT_DIR}/affine_mpc
+  #   NAMELINK_SKIP
+  # )
 else()
-  target_link_libraries(_bindings PUBLIC affine_mpc_static)
   install(TARGETS _bindings
     LIBRARY DESTINATION ${OUTPUT_DIR}/affine_mpc
     RUNTIME DESTINATION ${OUTPUT_DIR}/affine_mpc
   )
 endif()
 
-if("${Python3_EXECUTABLE}" STREQUAL "")
-  set(Python3_EXECUTABLE "$ENV{VIRTUAL_ENV}/bin/python")
-endif()
+# if("${Python3_EXECUTABLE}" STREQUAL "")
+#   set(Python3_EXECUTABLE "$ENV{VIRTUAL_ENV}/bin/python")
+# endif()
 
 if(WIN32)
   # on Windows, check TEMP then TMP environment variables
@@ -76,6 +79,7 @@ if(${GENERATE_STUBS})
 
   add_custom_command(TARGET _bindings POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E echo "Running post-build script for _bindings..."
+    COMMAND ${CMAKE_COMMAND} -E echo "Python executable: ${Python3_EXECUTABLE}"
 
     # copy affine_mpc python files to OUTPUT_DIR so the package can imported
     COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/src/affine_mpc/* ${CMAKE_CURRENT_BINARY_DIR}/affine_mpc/.
@@ -85,6 +89,7 @@ if(${GENERATE_STUBS})
 
     # copy custom stub file to package src (only if committing stub file to git)
     # COMMAND cp ${STUB_DIR}/affine_mpc/_bindings.pyi ${CMAKE_CURRENT_SOURCE_DIR}/src/affine_mpc/.
+    COMMAND cp ${STUB_DIR}/affine_mpc/_bindings.pyi ${CMAKE_CURRENT_BINARY_DIR}/affine_mpc/.
 
     COMMAND ${CMAKE_COMMAND} -E echo "Post-build script complete."
   )

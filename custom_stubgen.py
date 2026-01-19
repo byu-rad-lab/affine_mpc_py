@@ -2,64 +2,43 @@ import argparse
 import os
 from pathlib import Path
 import re
-import tempfile
-import sys
+import pybind11_stubgen
+import affine_mpc as ampc
 
-# assert False
 
 parser = argparse.ArgumentParser(description="")
-# parser.add_argument(
-#     "dir",
-#     nargs="?",
-#     type=str,
-#     default=tmp_dir,
-#     help="Directory in which to create generated 'stubs' dir",
-# )
 parser.add_argument(
     "dir",
-    nargs="?",
     type=str,
-    default="",
     help="Directory in which to load affine_mpc",
 )
 args = parser.parse_args()
-if args.dir != "":
-    sys.path.insert(0, args.dir)
 
+# try:
+#     import affine_mpc as ampc
+# except ImportError:
+#     print("Could not find affine_mpc!")
+#     raise FileNotFoundError(f"{os.listdir(args.dir)}")
+#     raise FileNotFoundError(f"{os.listdir(args.dir+'/affine_mpc')}")
 
-try:
-    import pybind11_stubgen
-except ImportError:
-    print("pybind11_stubgen not found")
-    # exit(1)
+pkg = "affine_mpc"
+out_dir = Path(args.dir).resolve()
+# print("Out Dir:", out_dir)
+stub_dir = out_dir / "stubs"
+# print("Stub Dir:", stub_dir)
 
-try:
-    import affine_mpc as ampc
-except ImportError:
-    print("Could not find affine_mpc!")
-    raise FileNotFoundError(f"{os.listdir(args.dir)}")
-    raise FileNotFoundError(f"{os.listdir(args.dir+'/affine_mpc')}")
-
-# script_dir = Path(__file__).parent.resolve()
-tmp_dir = tempfile.gettempdir()
-# stub_dir = os.path.join(args.dir, "stubs")
-stub_dir = os.path.join(tmp_dir, "stubs")
-# stub_dir = re.sub("\\", "/", stub_dir)
-print("Stub Dir:", stub_dir)
-
-########
 
 pybind11_stubgen.main(
     [
         "-o",
-        stub_dir,
-        "affine_mpc",
+        stub_dir.as_posix(),
+        pkg,
         "--numpy-array-use-type-var",
         # "--numpy-array-wrap-with-annotated",
     ]
 )
 
-stub_file = os.path.join(stub_dir, "affine_mpc", "_bindings.pyi")
+stub_file = stub_dir / pkg / "_bindings.pyi"
 
 with open(stub_file, "r", encoding="utf-8") as f:
     content = f.read()

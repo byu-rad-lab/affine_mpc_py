@@ -5,6 +5,7 @@
 # except:
 #     pass
 
+from ._version import __version__
 from ._bindings import MPCBase, ImplicitMPC, BSplineMPC, MPCLogger, OSQPSettings
 
 __all__ = [

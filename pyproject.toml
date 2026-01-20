@@ -43,4 +43,7 @@ sdist.include = ["src/affine_mpc/_version.py"]
 # BUILD_SHARED_LIBS = "OFF"
 
 [tool.setuptools_scm]
-write_to = "src/affine_mpc/_version.py"
+# Uses info from git tags to generate version numbers.
+# Current commit must be tagged with no working changes to get a clean version;
+# otherwise, a local version identifier is added.
+write_to = "src/affine_mpc/_version.py" 

@@ -21,9 +21,13 @@ compiler (version 11).
 - [OSQP](https://osqp.org/docs/get_started/) (0.6.x, not yet 1.x)
   - This project will locally clone and build OSQP for you if not on your system
 - [Pybind11](https://pybind11.readthedocs.io/en/stable/index.html) (>2.4)
-  - Will be automatically installed to venv when you run `pip install .`
+  - Will be automatically installed to build environment (and deleted after) when you run `pip install .` (recommended)
   - Can be installed to system or venv if you want to specify version
-- [NumPy](https://numpy.org/) (>1.18)
+    - Via pip: `pip install "pybind11[global]"` (recommended system-wide install)
+    - Via apt (Ubuntu): `sudo apt install pybind11-dev`
+    - Via pacman (Arch): `sudo pacman -S pybind11`
+    - Other systems: search for pybing11 in your package manager
+- [NumPy](https://numpy.org/) (just needs to be compatible with pybind11 version - usually latest is fine)
   - Will be automatically installed to venv when you run `pip install .`
 
 ## Building from Source
@@ -45,6 +49,7 @@ This project is configured to set the runtime path (RPATH) of the python binding
 will look for the shared libraries in the same directory as the python bindings - in the installed `affine_mpc` folder);
 however, Windows does not support RPATH.
 To use this on Windows, you would most likely need to use `os.add_dll_directory(<path>)` in your Python code (maybe in `__init__.py` of the package?).
+It may also not work if trying to use system-installed shared libraries for Linux/MacOS (I think it would, but it has not been tested).
 
 ```sh
 pip install . --config-settings=cmake.define.BUILD_SHARED_LIBS=ON

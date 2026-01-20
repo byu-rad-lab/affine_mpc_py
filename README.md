@@ -44,6 +44,8 @@ pip install .
 
 **Might not work on Windows.**
 
+[More info on RPATH.](https://scikit-build-core.readthedocs.io/en/latest/guide/dynamic_link.html)
+
 Shared libraries must be found at runtime.
 This project is configured to set the runtime path (RPATH) of the python bindings to it's parent directory (meaning it
 will look for the shared libraries in the same directory as the python bindings - in the installed `affine_mpc` folder);

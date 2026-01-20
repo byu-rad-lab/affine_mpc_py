@@ -1,4 +1,7 @@
-cmake_minimum_required(VERSION 3.21)
+# 3.21 allows for IMPORTED_RUNTIME_ARTIFACTS
+# 3.27 allows for new way to import Python/Pybind11
+# 3.28 allows for EXCLUDE_FROM_ALL in FetchContent
+cmake_minimum_required(VERSION 3.28)
 project(affine_mpc_py LANGUAGES CXX)
 
 # for manual builds, scikit will install and this isn't needed

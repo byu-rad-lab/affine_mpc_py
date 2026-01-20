@@ -1,9 +1,10 @@
 import argparse
-import os
 from pathlib import Path
 import re
 import pybind11_stubgen
-import affine_mpc as ampc
+
+## This can test if stubgen will be able to find the package
+# import affine_mpc as ampc
 
 
 parser = argparse.ArgumentParser(description="")
@@ -14,18 +15,9 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
-# try:
-#     import affine_mpc as ampc
-# except ImportError:
-#     print("Could not find affine_mpc!")
-#     raise FileNotFoundError(f"{os.listdir(args.dir)}")
-#     raise FileNotFoundError(f"{os.listdir(args.dir+'/affine_mpc')}")
-
 pkg = "affine_mpc"
 out_dir = Path(args.dir).resolve()
-# print("Out Dir:", out_dir)
 stub_dir = out_dir / "stubs"
-# print("Stub Dir:", stub_dir)
 
 
 pybind11_stubgen.main(
@@ -71,5 +63,3 @@ except ImportError:
 
 with open(stub_file, "w", encoding="utf-8") as f:
     f.write(formatted)
-
-# assert os.path.exists(stub_file)

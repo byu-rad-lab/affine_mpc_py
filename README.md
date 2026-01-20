@@ -15,30 +15,78 @@ compiler (version 11).
 
 #### Required:
 
-- [Eigen](https://eigen.tuxfamily.org/dox/GettingStarted.html)
-  - Known to work with versions 3.3.7 and 3.4.0 - newer versions will likely also work
-  - This is probably already installed on your system if you have ROS
-  - Can install with `sudo apt install libeigen3-dev`
+- C++ Compiler (GCC, Clang, MSVC)
+- [Eigen](https://eigen.tuxfamily.org/dox/GettingStarted.html) (>3.4)
   - Can install from [source](https://gitlab.com/libeigen/eigen)
-- [OSQP](https://osqp.org/docs/get_started/)
-  - Known to work with version 0.6.2
-  - This project will locally clone and build OSQP for you if you do nothing
-  - Can install to system from [source](https://github.com/osqp/osqp)
-- [Pybind11](https://pybind11.readthedocs.io/en/stable/index.html) (required if you build Python bindings)
-  - Known to work with versions 2.4.3 and 2.9.2
-  - This project will locally clone and build Pybind11 version 2.9.2 for you if you do nothing
-  - Can install to system with `sudo apt install pybind11-dev`, which will give you version 2.4.3 and you must specify the cmake variable `PYBIND11_VER=2.4.3` if you want to use this version
-  - Can install to system from [source](https://github.com/pybind/pybind11)
-- [NumPy](https://numpy.org/) (required if you want to use Python bindings)
-  - Can install with 'pip install numpy'
+- [OSQP](https://osqp.org/docs/get_started/) (0.6.x, not yet 1.x)
+  - This project will locally clone and build OSQP for you if not on your system
+- [Pybind11](https://pybind11.readthedocs.io/en/stable/index.html) (>2.4)
+  - Will be automatically installed to venv when you run `pip install .`
+  - Can be installed to system or venv if you want to specify version
+- [NumPy](https://numpy.org/) (>1.18)
+  - Will be automatically installed to venv when you run `pip install .`
 
-## Building the Library
+## Building from Source
 
-Run
+First, clone the repository and cd into the top-level directory.
 
-```shell
+### With pip (recommended)
+
+```sh
 pip install .
 ```
+
+#### Optionally use shared libraries
+
+**Might not work on Windows.**
+
+Shared libraries must be found at runtime.
+This project is configured to set the runtime path (RPATH) of the python bindings to it's parent directory (meaning it
+will look for the shared libraries in the same directory as the python bindings - in the installed `affine_mpc` folder);
+however, Windows does not support RPATH.
+To use this on Windows, you would most likely need to use `os.add_dll_directory(<path>)` in your Python code (maybe in `__init__.py` of the package?).
+
+```sh
+pip install . --config-settings=cmake.define.BUILD_SHARED_LIBS=ON
+```
+
+### Manually with CMake (for development - not recommended for installation)
+
+You will need some Python packages first (numpy, pybind11, pybind11-stubgen, black):
+
+```sh
+pip install -r build_requirements.txt
+```
+
+#### If you have the Ninja generator installed
+
+```sh
+mkdir build install
+cmake -S . -B build -G "Ninja"
+cmake --build build --config Release
+cmake --install build --prefix install --component python_bindings
+```
+
+#### If you do not have Ninja
+
+```sh
+mkdir build install
+cmake -S . -B build
+cmake --build build --config Release --parallel
+cmake --install build --prefix install --component python_bindings
+```
+
+The `affine_mpc` package will now be inside of `install`.
+You could set the install location to be wherever you want, but if you want it to be in your Python environment then
+build with pip as shown above.
+To use the package, you either need to be inside of the `install` directory, add the path to your `PYTHONPATH`
+environment variable, or copy the `affine_mpc` folder inside of the install directory to somewhere that is on your
+Python path.
+The last option is not recommended as you generally should not manually edit Python venvs.
+Editing `PYTHONPATH` is not recommended either, but it works if you do not want to install with pip.
+Honestly, the best option is to just install with pip.
+
+### Verify Installation
 
 Then in a python file you can import the package:
 
@@ -249,12 +297,12 @@ Also, the `MPCLogger` destructor is set to write a param file with the default n
 
 With `pytest`:
 
-```shell
+```sh
 pytest
 ```
 
 Without `pytest`:
 
-```
+```sh
 python3 test/<testfile>.py
 ```

@@ -1,5 +1,4 @@
 [build-system]
-# requires = ["scikit-build-core", "pybind11[global]", "numpy", "pybind11-stubgen", "black"]
 requires = ["scikit-build-core", "pybind11", "numpy", "pybind11-stubgen", "black"]
 build-backend = "scikit_build_core.build"
 
@@ -32,11 +31,6 @@ keywords = ["affine mpc", "mpc", "model predictive control"]
 dev = [
     "pytest",
 ]
-build = [
-    "pybind11[global]",
-    "pybind11-stubgen",
-    "black",
-]
 
 [tool.scikit-build]
 cmake.build-type = "Release"
@@ -45,8 +39,7 @@ metadata.version.provider = "scikit_build_core.metadata.setuptools_scm"
 minimum-version = "0.8"
 sdist.include = ["src/affine_mpc/_version.py"]
 
-[tool.scikit-build.cmake.define]
-# CMAKE_BUILD_TYPE = "Release"
+# [tool.scikit-build.cmake.define]
 # BUILD_SHARED_LIBS = "OFF"
 
 [tool.setuptools_scm]

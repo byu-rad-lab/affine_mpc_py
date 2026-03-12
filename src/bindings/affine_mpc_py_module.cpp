@@ -8,10 +8,12 @@ PYBIND11_MODULE(_bindings, m)
 {
   m.doc() = "Affine MPC module";
 
+  moduleAddOptions(m);
+  moduleAddParameterization(m);
   moduleAddOsqpSettings(m);
   moduleAddMPCBase(m);
-  moduleAddImplicitMPC(m);
-  moduleAddBSplineMPC(m);
+  moduleAddCondensedMPC(m);
+  moduleAddSparseMPC(m);
   moduleAddMpcLogger(m);
 }
 

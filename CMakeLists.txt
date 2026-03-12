@@ -19,11 +19,13 @@ include(cmake/extern_ampc.cmake)
 # -----------------------------------------
 pybind11_add_module(_bindings MODULE
   src/bindings/affine_mpc_py_module.cpp
-  src/bindings/py_mpc_base.cpp
-  src/bindings/py_implicit_mpc.cpp
-  src/bindings/py_bspline_mpc.cpp
-  src/bindings/py_mpc_logger.cpp
+  src/bindings/py_options.cpp
+  src/bindings/py_parameterization.cpp
   src/bindings/py_osqp_settings.cpp
+  src/bindings/py_mpc_base.cpp
+  src/bindings/py_condensed_mpc.cpp
+  src/bindings/py_sparse_mpc.cpp
+  src/bindings/py_mpc_logger.cpp
 )
 
 # Set output directory to match package structure
@@ -109,12 +111,23 @@ if(BUILD_SHARED_LIBS)
   )
 endif()
 
+# if(GENERATE_STUBS)
+#   # Install generated stub file for the bindings module (IDE support)
+#   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/stubs/affine_mpc/_bindings.pyi
+#     DESTINATION affine_mpc
+#     COMPONENT python_bindings
+#     OPTIONAL
+#   )
+# endif()
+
 if(GENERATE_STUBS)
-  # Install generated stub file for the bindings module (IDE support)
-  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/stubs/affine_mpc/_bindings.pyi
+  install(
+    DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/stubs/affine_mpc/
     DESTINATION affine_mpc
     COMPONENT python_bindings
-    OPTIONAL
+    FILES_MATCHING
+      PATTERN "*.pyi"
+      PATTERN "py.typed"
   )
 endif()
 

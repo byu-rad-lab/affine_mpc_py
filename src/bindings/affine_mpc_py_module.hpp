@@ -6,10 +6,12 @@
 namespace affine_mpc {
 namespace py = pybind11;
 
+void moduleAddOptions(py::module& m);
+void moduleAddParameterization(py::module& m);
 void moduleAddOsqpSettings(py::module& m);
 void moduleAddMPCBase(py::module& m);
-void moduleAddImplicitMPC(py::module& m);
-void moduleAddBSplineMPC(py::module& m);
+void moduleAddCondensedMPC(py::module& m);
+void moduleAddSparseMPC(py::module& m);
 void moduleAddMpcLogger(py::module& m);
 
 } // namespace affine_mpc

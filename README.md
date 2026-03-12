@@ -26,13 +26,13 @@ compiler (version 11).
     - Via pip: `pip install "pybind11[global]"` (recommended system-wide install)
     - Via apt (Ubuntu): `sudo apt install pybind11-dev`
     - Via pacman (Arch): `sudo pacman -S pybind11`
-    - Other systems: search for pybing11 in your package manager
-- [NumPy](https://numpy.org/) (just needs to be compatible with pybind11 version - usually latest is fine)
+    - Other systems: search for "Pybind11" in your package manager
+- [NumPy](https://numpy.org/) (just needs to be compatible with Pybind11 version - usually latest is fine)
   - Will be automatically installed to venv when you run `pip install .`
 
 ## Building from Source
 
-First, clone the repository and cd into the top-level directory.
+First, clone the repository and `cd` into the top-level directory.
 
 ### With pip (recommended)
 
@@ -47,8 +47,8 @@ pip install .
 [More info on RPATH.](https://scikit-build-core.readthedocs.io/en/latest/guide/dynamic_link.html)
 
 Shared libraries must be found at runtime.
-This project is configured to set the runtime path (RPATH) of the python bindings to it's parent directory (meaning it
-will look for the shared libraries in the same directory as the python bindings - in the installed `affine_mpc` folder);
+This project is configured to set the runtime path (RPATH) of the python bindings to its parent directory.
+This means it will look for the shared libraries in the same directory as the python bindings (in the installed `affine_mpc` folder);
 however, Windows does not support RPATH.
 To use this on Windows, you would most likely need to use `os.add_dll_directory(<path>)` in your Python code (maybe in `__init__.py` of the package?).
 It may also not work if trying to use system-installed shared libraries for Linux/MacOS (I think it would, but it has not been tested).
@@ -84,11 +84,8 @@ cmake --install build --prefix install --component python_bindings
 ```
 
 The `affine_mpc` package will now be inside of `install`.
-You could set the install location to be wherever you want, but if you want it to be in your Python environment then
-build with pip as shown above.
-To use the package, you either need to be inside of the `install` directory, add the path to your `PYTHONPATH`
-environment variable, or copy the `affine_mpc` folder inside of the install directory to somewhere that is on your
-Python path.
+You could set the install location to be wherever you want, but if you want it to be in your Python environment then build with pip as shown above.
+To use the package, you either need to be inside of the `install` directory, add the path to your `PYTHONPATH` environment variable, or copy the `affine_mpc` folder inside of the install directory to somewhere that is on your Python path.
 The last option is not recommended as you generally should not manually edit Python venvs.
 Editing `PYTHONPATH` is not recommended either, but it works if you do not want to install with pip.
 Honestly, the best option is to just install with pip.
@@ -128,7 +125,9 @@ where, $`x \in \mathbb{R}^n`$ is the state, $`\bar{x} \in \mathbb{R}^n`$ is the 
 
 **NOTE:** The norm in the cost function is a weighted 2-norm where $`||x||^2_M = x^\top M x`$.
 
-The MPC optimization problem must be converted to a QP optimization problem in order to use the OSQP solver. This [paper](https://arxiv.org/pdf/2001.04931.pdf) shows how the conversion is done. Note that Implicit MPC is what the paper calls Small Matrix Formulation.
+The MPC optimization problem must be converted to a QP optimization problem in order to use the OSQP solver.
+This [paper](https://arxiv.org/pdf/2001.04931.pdf) shows how the conversion is done.
+Note that Condensed MPC is what the paper calls Small Matrix Formulation and Sparse MPC is what the paper calls Large Matrix Formulation.
 
 <!--
 Possible additions:
@@ -195,7 +194,7 @@ Once the solver is initialized, you need to specify weights and reference trajec
 
 #### Relevant Functions
 
-**Note:** all of the following function arguents are 1D vectors/arrays.
+**Note:** all the following function arguments are 1D vectors/arrays.
 
 ```python
 def setWeights(Q_diag: NDArray, R_diag: NDArray) -> None:
@@ -211,7 +210,7 @@ def setReferenceInput(u_step: NDArray) -> None:
 def setReferenceParameterizedInputTrajectory(u_traj_ctrl_pts: NDArray) -> None:
 ```
 
-#### Update parameters from pre-initialization setup
+#### Update Parameters from pre-Initialization Setup
 
 You can call any of the pre-initialization setup to update them before solving. If you want to successively linearize or affinize then you will need to update the model before each solve.
 
@@ -229,7 +228,7 @@ Now you are ready to solve!
 def solve(x0: NDArray) -> bool: # returns true if successful
 ```
 
-#### Get desired information from solve
+#### Get Desired Information from Solve
 
 You can get the next input to apply (the first input from the prediction horizon), the parameterized input trajectory, or the entire input trajectory over the prediction horizon. You can also get the predicted state trajectory (where MPC thinks the system will go).
 

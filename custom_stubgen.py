@@ -3,6 +3,15 @@ from pathlib import Path
 import re
 import pybind11_stubgen
 
+import sys
+
+debug = False
+
+if debug:
+    print("exe:", sys.executable)
+    print("path:", sys.path)
+    print()
+
 ## This can test if stubgen will be able to find the package
 # import affine_mpc as ampc
 
@@ -31,6 +40,22 @@ pybind11_stubgen.main(
 )
 
 stub_file = stub_dir / pkg / "_bindings.pyi"
+repo_stub_file = Path(__file__).parent / pkg / "_bindings.pyi"
+
+if debug:
+    print("exists:", stub_dir.exists())
+    print("out_dir:", stub_dir.exists())
+    for entry in stub_dir.iterdir():
+        print(entry.name)
+    print()
+
+    print(pkg)
+    for entry in stub_file.parent.iterdir():
+        print(entry.name)
+    print()
+
+    print("stub_file:", stub_file)
+    print("exists:", stub_file.exists())
 
 with open(stub_file, "r", encoding="utf-8") as f:
     content = f.read()
@@ -41,6 +66,8 @@ content = re.sub(r"from __future__ import annotations", "", content)
 #     content,
 #     count=1,
 # )
+# content = re.sub("typing.SupportsInt . typing.SupportsIndex", "int", content)
+content = re.sub(" . typing.SupportsIndex", "", content)
 content = re.sub("typing.SupportsInt", "int", content)
 content = re.sub("typing.SupportsFloat", "float", content)
 content = re.sub(r"M = .*\nN = .*", "", content)
@@ -48,8 +75,9 @@ content = re.sub(
     r"tuple\[M,[^,]*, numpy\.dtype\[numpy\.float64\]", "numpy.float64", content
 )
 # content = re.sub(r"numpy\.ndarray", "NDArray", content)
-content = re.sub(r" = \.\.\.", " = numpy.empty(0)", content)
-content = re.sub(r"OSQPSettings = None", "OSQPSettings|None = None", content)
+# content = re.sub(r" = \.\.\.", " = numpy.empty(0)", content)
+content = re.sub(r"Options = \.\.\.", "Options = Options()", content)
+content = re.sub(r"OSQPSettings = \.\.\.", "OSQPSettings = OSQPSettings()", content)
 
 try:
     import black
@@ -61,5 +89,8 @@ except ImportError:
     print("black not found!")
     formatted = content
 
-with open(stub_file, "w", encoding="utf-8") as f:
+# with open(stub_file, "w", encoding="utf-8") as f:
+#     f.write(formatted)
+
+with open(repo_stub_file, "w", encoding="utf-8") as f:
     f.write(formatted)

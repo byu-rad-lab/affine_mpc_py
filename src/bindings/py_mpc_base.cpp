@@ -7,19 +7,20 @@
 #include "affine_mpc/options.hpp"
 #include "affine_mpc/parameterization.hpp"
 
-namespace affine_mpc {
+namespace affine_mpc_py {
+namespace ampc = affine_mpc;
 namespace py = pybind11;
 
 // see Pybind11 docs:
 // Classes -> Overriding virtual functions in Python
 // Classes -> Binding protected member functions
-class PyMPCBase : public MPCBase
+class PyMPCBase : public ampc::MPCBase
 {
 public:
   PyMPCBase(const int state_dim,
             const int input_dim,
-            const Parameterization& parameterization,
-            const Options& opts,
+            const ampc::Parameterization& parameterization,
+            const ampc::Options& opts,
             const int num_design_vars,
             const int num_custom_constraints) :
       MPCBase(state_dim,
@@ -28,6 +29,9 @@ public:
               opts,
               num_design_vars,
               num_custom_constraints)
+  // parameterization.horizon_steps
+  //     * parameterization.num_control_points,
+  // 0)
   {
     // Allow creation for unit tests. Still abstract and unusable.
   }
@@ -61,15 +65,19 @@ public:
 
 void moduleAddMPCBase(py::module& m)
 {
-  py::class_<MPCBase, PyMPCBase> base(m, "MPCBase",
-                                      "Abstract class. Not usable on its own.");
-  base.def(py::init<const int, const int, const Parameterization&,
-                    const Options&, const int, const int>(),
+  py::class_<ampc::MPCBase, PyMPCBase> base(
+      m, "MPCBase", "Abstract class. Not usable on its own.");
+  base.def(py::init<const int, const int, const ampc::Parameterization&,
+                    const ampc::Options&, const int, const int>(),
            "Constructor", py::arg("state_dim"), py::arg("input_dim"),
            py::arg("param"), py::arg("opts"), py::arg("num_design_vars"),
            py::arg("num_custom_constraints"));
+  // base.def(py::init<const int, const int, const ampc::Parameterization&,
+  //                   const ampc::Options&>(),
+  //          "Constructor", py::arg("state_dim"), py::arg("input_dim"),
+  //          py::arg("param"), py::arg("opts"));
 
-  base.def("initializeSolver", &MPCBase::initializeSolver,
+  base.def("initializeSolver", &ampc::MPCBase::initializeSolver,
            R"(
 Initialize OSQP solver after configuring MPC setup. Calling this method after
 a successful initialization will simply return True without doing anything.
@@ -85,9 +93,10 @@ Args:
 Returns:
     success: True if initialization succeeds, false otherwise.
            )",
-           py::arg("solver_settings") = OSQPSolver::getRecommendedSettings());
+           py::arg("solver_settings") =
+               ampc::OSQPSolver::getRecommendedSettings());
 
-  base.def("solve", &MPCBase::solve,
+  base.def("solve", &ampc::MPCBase::solve,
            R"(
 Solve optimization problem for the given initial state.
 
@@ -99,13 +108,15 @@ Args:
     x0: Initial (current) state vector.
 
 Returns:
-    solve_status: Result indication.
+    solve_status: Result indication. Generally expected to be `Success` unless
+        the solver has not been initialized, then `NotInitialized`. Verify your
+        problem setup and consult OSQP documentation for any other value.
            )",
            py::arg("x0"));
 
   base.def(
       "getNextInput",
-      [](MPCBase& self, Eigen::Ref<Eigen::VectorXd> u0) {
+      [](ampc::MPCBase& self, Eigen::Ref<Eigen::VectorXd> u0) {
         self.getNextInput(u0);
         return u0;
       },
@@ -119,7 +130,7 @@ Args:
       py::arg("u0"));
   base.def(
       "getNextInput",
-      [](MPCBase& self) {
+      [](ampc::MPCBase& self) {
         Eigen::VectorXd u0{self.getInputDim()};
         self.getNextInput(u0);
         return u0;
@@ -134,7 +145,7 @@ returns:
 
   base.def(
       "getParameterizedInputTrajectory",
-      [](MPCBase& self, Eigen::Ref<Eigen::VectorXd> u_traj_ctrl_pts) {
+      [](ampc::MPCBase& self, Eigen::Ref<Eigen::VectorXd> u_traj_ctrl_pts) {
         self.getParameterizedInputTrajectory(u_traj_ctrl_pts);
         return u_traj_ctrl_pts;
       },
@@ -147,7 +158,7 @@ Args:
       py::arg("u_traj_ctrl_pts"));
   base.def(
       "getParameterizedInputTrajectory",
-      [](MPCBase& self) {
+      [](ampc::MPCBase& self) {
         Eigen::VectorXd u_traj_ctrl_pts{self.getInputDim()
                                         * self.getNumControlPoints()};
         self.getParameterizedInputTrajectory(u_traj_ctrl_pts);
@@ -162,7 +173,7 @@ returns:
 
   base.def(
       "getInputTrajectory",
-      [](MPCBase& self, Eigen::Ref<Eigen::VectorXd> u_traj) {
+      [](ampc::MPCBase& self, Eigen::Ref<Eigen::VectorXd> u_traj) {
         self.getInputTrajectory(u_traj);
         return u_traj;
       },
@@ -175,7 +186,7 @@ Args:
       py::arg("u_traj"));
   base.def(
       "getInputTrajectory",
-      [](MPCBase& self) {
+      [](ampc::MPCBase& self) {
         Eigen::VectorXd u_traj{self.getInputDim() * self.getHorizonSteps()};
         self.getInputTrajectory(u_traj);
         return u_traj;
@@ -189,7 +200,7 @@ returns:
 
   base.def(
       "getPredictedStateTrajectory",
-      [](MPCBase& self, Eigen::Ref<Eigen::VectorXd> x_traj) {
+      [](ampc::MPCBase& self, Eigen::Ref<Eigen::VectorXd> x_traj) {
         self.getPredictedStateTrajectory(x_traj);
         return x_traj;
       },
@@ -202,7 +213,7 @@ Args:
       py::arg("x_traj"));
   base.def(
       "getPredictedStateTrajectory",
-      [](MPCBase& self) {
+      [](ampc::MPCBase& self) {
         Eigen::VectorXd x_traj{self.getStateDim() * self.getHorizonSteps()};
         self.getPredictedStateTrajectory(x_traj);
         return x_traj;
@@ -216,7 +227,7 @@ returns:
 
   base.def(
       "propagateModel",
-      [](MPCBase& self, const Eigen::Ref<const Eigen::VectorXd>& x,
+      [](ampc::MPCBase& self, const Eigen::Ref<const Eigen::VectorXd>& x,
          const Eigen::Ref<const Eigen::VectorXd>& u,
          Eigen::Ref<Eigen::VectorXd> x_next) {
         self.propagateModel(x, u, x_next);
@@ -235,7 +246,7 @@ Args:
       py::arg("x"), py::arg("u"), py::arg("x_next"));
   base.def(
       "propagateModel",
-      [](MPCBase& self, const Eigen::Ref<const Eigen::VectorXd>& x,
+      [](ampc::MPCBase& self, const Eigen::Ref<const Eigen::VectorXd>& x,
          const Eigen::Ref<const Eigen::VectorXd>& u) {
         Eigen::VectorXd x_next{self.getStateDim()};
         self.propagateModel(x, u, x_next);
@@ -255,7 +266,7 @@ Returns:
       )",
       py::arg("x"), py::arg("u"));
 
-  base.def("setModelDiscrete", &MPCBase::setModelDiscrete,
+  base.def("setModelDiscrete", &ampc::MPCBase::setModelDiscrete,
            R"(
 Set the internal discrete-time model directly from a discrete model. The model
 being `x_next = Ax + Bu + w`.
@@ -269,7 +280,8 @@ Returns:
     success: True if the internal QP was updated properly. Unlikely to be False.
            )",
            py::arg("Ad"), py::arg("Bd"), py::arg("wd"));
-  base.def("setModelContinuous2Discrete", &MPCBase::setModelContinuous2Discrete,
+  base.def("setModelContinuous2Discrete",
+           &ampc::MPCBase::setModelContinuous2Discrete,
            R"(
 Set the internal discrete-time model from a continuous-time model, which will be
 discretized. The model being `x_next = Ax + Bu + w`.
@@ -298,7 +310,7 @@ Returns:
 
   base.def(
       "setWeights",
-      [](MPCBase& self, const Eigen::Ref<const Eigen::VectorXd>& Q_diag,
+      [](ampc::MPCBase& self, const Eigen::Ref<const Eigen::VectorXd>& Q_diag,
          const Eigen::Ref<const Eigen::VectorXd>& R_diag) {
         self.setWeights(Q_diag, R_diag);
       },
@@ -314,7 +326,7 @@ Args:
       py::arg("Q_diag"), py::arg("R_diag"));
   base.def(
       "setWeights",
-      [](MPCBase& self, const Eigen::Ref<const Eigen::VectorXd>& Q_diag,
+      [](ampc::MPCBase& self, const Eigen::Ref<const Eigen::VectorXd>& Q_diag,
          const Eigen::Ref<const Eigen::VectorXd>& Qf_diag,
          const Eigen::Ref<const Eigen::VectorXd>& R_diag) {
         self.setWeights(Q_diag, R_diag);
@@ -333,7 +345,7 @@ Args:
 
   base.def(
       "setStateWeights",
-      [](MPCBase& self, const Eigen::Ref<const Eigen::VectorXd>& Q_diag) {
+      [](ampc::MPCBase& self, const Eigen::Ref<const Eigen::VectorXd>& Q_diag) {
         self.setStateWeights(Q_diag);
       },
       R"(
@@ -345,7 +357,7 @@ Args:
       py::arg("Q_diag"));
   base.def(
       "setStateWeights",
-      [](MPCBase& self, const Eigen::Ref<const Eigen::VectorXd>& Q_diag,
+      [](ampc::MPCBase& self, const Eigen::Ref<const Eigen::VectorXd>& Q_diag,
          const Eigen::Ref<const Eigen::VectorXd>& Qf_diag) {
         self.setStateWeights(Q_diag, Qf_diag);
       },
@@ -358,7 +370,7 @@ Args:
       )",
       py::arg("Q_diag"), py::arg("Qf_diag"));
 
-  base.def("setInputWeights", &MPCBase::setInputWeights,
+  base.def("setInputWeights", &ampc::MPCBase::setInputWeights,
            R"(
 Set only the input weights for the cost function.
 
@@ -369,7 +381,7 @@ Args:
            )",
            py::arg("R_diag"));
 
-  base.def("setReferenceState", &MPCBase::setReferenceState,
+  base.def("setReferenceState", &ampc::MPCBase::setReferenceState,
            R"(
 Set reference state trajectory as a step command.
 
@@ -381,7 +393,8 @@ Returns:
            )",
            py::arg("x_step"));
 
-  base.def("setReferenceStateTrajectory", &MPCBase::setReferenceStateTrajectory,
+  base.def("setReferenceStateTrajectory",
+           &ampc::MPCBase::setReferenceStateTrajectory,
            R"(
 Set reference state trajectory.
 
@@ -396,7 +409,7 @@ Returns:
            )",
            py::arg("x_traj"));
 
-  base.def("setReferenceInput", &MPCBase::setReferenceInput,
+  base.def("setReferenceInput", &ampc::MPCBase::setReferenceInput,
            R"(
 Set reference input trajectory as a step command (reference for all control
 points set to this value).
@@ -412,7 +425,7 @@ Returns:
            py::arg("u_step"));
 
   base.def("setReferenceParameterizedInputTrajectory",
-           &MPCBase::setReferenceParameterizedInputTrajectory,
+           &ampc::MPCBase::setReferenceParameterizedInputTrajectory,
            R"(
 Set reference control points for the input trajectory.
 
@@ -429,7 +442,7 @@ Returns:
            )",
            py::arg("u_traj_ctrl_pts"));
 
-  base.def("setInputLimits", &MPCBase::setInputLimits,
+  base.def("setInputLimits", &ampc::MPCBase::setInputLimits,
            R"(
 Set input saturation limits.
 
@@ -444,7 +457,7 @@ Returns:
     success: True if the internal QP was updated properly. Unlikely to be False.
            )",
            py::arg("u_min"), py::arg("u_max"));
-  base.def("setStateLimits", &MPCBase::setStateLimits,
+  base.def("setStateLimits", &ampc::MPCBase::setStateLimits,
            R"(
 Set state saturation limits.
 
@@ -460,7 +473,7 @@ Returns:
     success: True if the internal QP was updated properly. Unlikely to be False.
            )",
            py::arg("x_min"), py::arg("x_max"));
-  base.def("setSlewRate", &MPCBase::setSlewRate,
+  base.def("setSlewRate", &ampc::MPCBase::setSlewRate,
            R"(
 Set slew-rate constraint limits for control points. Control points can vary by
 up to this magnitude from one index to the next.
@@ -477,7 +490,7 @@ Returns:
            )",
            py::arg("u_slew"));
 
-  base.def("setSlewRateInitial", &MPCBase::setSlewRateInitial,
+  base.def("setSlewRateInitial", &ampc::MPCBase::setSlewRateInitial,
            R"(
 Set initial slew-rate constraint limits for control points. Initial input can
 vary by up to this magnitude from the previous input. See `setPreviousInput()`.
@@ -494,7 +507,7 @@ Returns:
            )",
            py::arg("u0_slew"));
 
-  base.def("setPreviousInput", &MPCBase::setPreviousInput,
+  base.def("setPreviousInput", &ampc::MPCBase::setPreviousInput,
            R"(
 Set the previous input, which is only used with the `slew_initial_input`
 constraint option. Defaults to zeros, but should be set prior to first solve if
@@ -516,13 +529,14 @@ Returns:
            )",
            py::arg("u_prev"));
 
-  base.def_property_readonly("state_dim",
-                             [](MPCBase& self) { return self.getStateDim(); });
-  base.def_property_readonly("input_dim",
-                             [](MPCBase& self) { return self.getInputDim(); });
   base.def_property_readonly(
-      "horizon_steps", [](MPCBase& self) { return self.getHorizonSteps(); });
-  base.def_property_readonly("num_control_points", [](MPCBase& self) {
+      "state_dim", [](ampc::MPCBase& self) { return self.getStateDim(); });
+  base.def_property_readonly(
+      "input_dim", [](ampc::MPCBase& self) { return self.getInputDim(); });
+  base.def_property_readonly("horizon_steps", [](ampc::MPCBase& self) {
+    return self.getHorizonSteps();
+  });
+  base.def_property_readonly("num_control_points", [](ampc::MPCBase& self) {
     return self.getNumControlPoints();
   });
 
@@ -533,4 +547,4 @@ Returns:
   //   QP problem", py::arg("x0"));
 }
 
-} // namespace affine_mpc
+} // namespace affine_mpc_py

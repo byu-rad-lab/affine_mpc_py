@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.28)
 project(affine_mpc_py LANGUAGES CXX)
 
 # Stub files provide IDE support (signature help) for compiled bindings
-option(GENERATE_STUBS "Generate stub files for compiled bindings" ON)
+option(GENERATE_STUBS "Generate stub files for compiled bindings" OFF)
 
 # -----------------------------------------
 # Dependencies
@@ -22,6 +22,7 @@ pybind11_add_module(_bindings MODULE
   src/bindings/py_options.cpp
   src/bindings/py_parameterization.cpp
   src/bindings/py_osqp_settings.cpp
+  src/bindings/py_solve_status.cpp
   src/bindings/py_mpc_base.cpp
   src/bindings/py_condensed_mpc.cpp
   src/bindings/py_sparse_mpc.cpp
@@ -111,29 +112,32 @@ if(BUILD_SHARED_LIBS)
   )
 endif()
 
-# if(GENERATE_STUBS)
-#   # Install generated stub file for the bindings module (IDE support)
-#   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/stubs/affine_mpc/_bindings.pyi
-#     DESTINATION affine_mpc
-#     COMPONENT python_bindings
-#     OPTIONAL
-#   )
-# endif()
-
 if(GENERATE_STUBS)
-  install(
-    DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/stubs/affine_mpc/
+  # Install generated stub file for the bindings module (IDE support)
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/stubs/affine_mpc/_bindings.pyi
     DESTINATION affine_mpc
     COMPONENT python_bindings
-    FILES_MATCHING
-      PATTERN "*.pyi"
-      PATTERN "py.typed"
+    OPTIONAL
   )
 endif()
+
+# if(GENERATE_STUBS)
+#   install(
+#     DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/stubs/affine_mpc/
+#     DESTINATION affine_mpc
+#     COMPONENT python_bindings
+#     FILES_MATCHING
+#       PATTERN "*.pyi"
+#       PATTERN "py.typed"
+#   )
+# endif()
 
 # Install regular Python files for the package
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/affine_mpc
   DESTINATION .
   COMPONENT python_bindings
-  FILES_MATCHING PATTERN "*.py"
+  FILES_MATCHING
+    PATTERN "*.py"
+    PATTERN "*.pyi"
+    PATTERN "py.typed"
 )

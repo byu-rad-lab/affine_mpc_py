@@ -4,16 +4,18 @@
 #include <pybind11/pybind11.h>
 
 #include "affine_mpc/condensed_mpc.hpp"
+#include "affine_mpc/options.hpp"
 #include "affine_mpc/parameterization.hpp"
 
-namespace affine_mpc {
+namespace affine_mpc_py {
+namespace ampc = affine_mpc;
 namespace py = pybind11;
 
 
 void moduleAddCondensedMPC(py::module& m)
 {
-  py::class_<CondensedMPC, MPCBase> mpc(m, "CondensedMPC",
-                                        R"(
+  py::class_<ampc::CondensedMPC, ampc::MPCBase> mpc(m, "CondensedMPC",
+                                                    R"(
 MPC formulation where only parameterization control points are optimization
 design variables (condensed QP).
 
@@ -23,9 +25,9 @@ QP. Preferred for shorter horizons and lower-dimensional problems.
 Converts the MPC problem to QP form for OSQP, using input parameterization.
                                          )");
 
-  mpc.def(
-      py::init<const int, const int, const Parameterization&, const Options&>(),
-      R"(
+  mpc.def(py::init<const int, const int, const ampc::Parameterization&,
+                   const ampc::Options&>(),
+          R"(
 Construct CondensedMPC with specified input parameterization and MPC
 configuration options.
 
@@ -35,10 +37,10 @@ Args:
    param: Input trajectory parameterization.
    opts: Optional MPC configuration features to enable.
            )",
-      py::arg("state_dim"), py::arg("input_dim"), py::arg("param"),
-      py::arg("opts") = Options());
+          py::arg("state_dim"), py::arg("input_dim"), py::arg("param"),
+          py::arg("opts") = ampc::Options{});
 
-  mpc.def(py::init<const int, const int, const int, const Options&>(),
+  mpc.def(py::init<const int, const int, const int, const ampc::Options&>(),
           R"(
 Construct CondensedMPC with no parameterization (full input trajectory will be
 optimized) and MPC configuration options.
@@ -50,7 +52,7 @@ Args:
    opts: Optional MPC configuration features to enable.
            )",
           py::arg("state_dim"), py::arg("input_dim"), py::arg("horizon_steps"),
-          py::arg("opts") = Options());
+          py::arg("opts") = ampc::Options{});
 
   //   mpc.def(
   //       "getInputTrajectory",
@@ -111,4 +113,4 @@ Args:
   //         "Set slew rate constraint limits", py::arg("u_slew"));
 }
 
-} // namespace affine_mpc
+} // namespace affine_mpc_py

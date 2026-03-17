@@ -1,18 +1,28 @@
-# from . import plotter
-
-# try:
-#     from ._bindings import MPCBase, ImplicitMPC, BSplineMPC, MPCLogger, OSQPSettings
-# except:
-#     pass
+"""
+Affine MPC module.
+"""
 
 from ._version import __version__
-from ._bindings import Options, Parameterization, OSQPSettings  # , OSQPSolver
-from ._bindings import MPCBase, CondensedMPC, SparseMPC, MPCLogger
+
+from ._bindings import (
+    Options,
+    Parameterization,
+    OSQPSettings,
+    SolveStatus,
+    # OSQPSolver,
+    MPCBase,
+    CondensedMPC,
+    SparseMPC,
+    MPCLogger,
+)
+
+# from . import plotter
 
 __all__ = [
     "Options",
     "Parameterization",
     "OSQPSettings",
+    "SolveStatus",
     # "OSQPSolver",
     "MPCBase",
     "CondensedMPC",

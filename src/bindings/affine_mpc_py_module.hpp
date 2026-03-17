@@ -3,17 +3,17 @@
 
 #include <pybind11/pybind11.h>
 
-namespace affine_mpc {
-namespace py = pybind11;
+namespace affine_mpc_py {
 
-void moduleAddOptions(py::module& m);
-void moduleAddParameterization(py::module& m);
-void moduleAddOsqpSettings(py::module& m);
-void moduleAddMPCBase(py::module& m);
-void moduleAddCondensedMPC(py::module& m);
-void moduleAddSparseMPC(py::module& m);
-void moduleAddMpcLogger(py::module& m);
+void moduleAddOptions(pybind11::module& m);
+void moduleAddParameterization(pybind11::module& m);
+void moduleAddOsqpSettings(pybind11::module& m);
+void moduleAddSolveStatus(pybind11::module& m);
+void moduleAddMPCBase(pybind11::module& m);
+void moduleAddCondensedMPC(pybind11::module& m);
+void moduleAddSparseMPC(pybind11::module& m);
+void moduleAddMpcLogger(pybind11::module& m);
 
-} // namespace affine_mpc
+} // namespace affine_mpc_py
 
 #endif // AFFINE_MPC_MODULE_HPP

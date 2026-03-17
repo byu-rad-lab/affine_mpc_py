@@ -1,4 +1,4 @@
-import affine_mpc_py as ampc
+import affine_mpc as ampc
 
 
 def test_osqp_settings_interface():
@@ -20,19 +20,21 @@ def test_osqp_settings_interface():
         settings.eps_prim_inf = 1e-4
         settings.eps_dual_inf = 1e-4
         settings.alpha = 1.6
-        settings.linsys_solver = ampc.OSQPSettings.LinsysSolverType.QDLDL_SOLVER
-        settings.linsys_solver = settings.LinsysSolverType.MKL_PARDISO_SOLVER
+        settings.linsys_solver = ampc.OSQPSettings.LinsysSolverType.DirectSolver
+        settings.linsys_solver = 1
+        settings.linsys_solver = settings.LinsysSolverType.IndirectSolver
+        settings.linsys_solver = settings.LinsysSolverType.UnknownSolver
 
         settings.delta = 1e-6
-        settings.polish = 0
+        settings.polishing = 0
         settings.polish_refine_iter = 3
         settings.verbose = 1
 
         settings.scaled_termination = 0
         settings.check_termination = 25
-        settings.warm_start = 1
+        settings.warm_starting = 1
 
-        settings.time_limit = 0 # disabled
+        settings.time_limit = 0  # disabled
     except:
         assert False
 

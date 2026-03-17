@@ -1,5 +1,6 @@
 import tempfile
 import os
+from pathlib import Path
 from time import perf_counter
 
 import numpy as np
@@ -9,13 +10,14 @@ import plot
 
 
 def main():
-    msd_mpc = ampc.ImplicitMPC(
-        num_states=2,
-        num_inputs=1,
-        len_horizon=10,
-        num_control_points=3,
-        use_input_cost=True,
-        # use_slew_rate=True,
+
+    msd_mpc = ampc.CondensedMPC(
+        state_dim=2,
+        input_dim=1,
+        param=ampc.Parameterization.linearInterp(
+            horizon_steps=10, num_control_points=3
+        ),
+        opts=ampc.Options(use_input_cost=True),
     )
 
     tmp = tempfile.gettempdir()
@@ -52,7 +54,7 @@ def main():
     while t < tf:
         start = perf_counter()
         solved = msd_mpc.solve(xk)
-        if not solved:
+        if not solved == ampc.SolveStatus.Success:
             print("Did not solve :(")
         uk = msd_mpc.getNextInput()
         elapsed = perf_counter() - start

@@ -1,44 +1,20 @@
 import numpy as np
 
-import affine_mpc_py as ampc
+import affine_mpc as ampc
 
 
-def test_bspline_mpc_interface():
+def test_implicit_mpc_interface():
     try:
-        n, m, T, nc, deg = 2, 1, 10, 5, 2
-        mpc = ampc.BSplineMPC(
-            num_states=n,
-            num_inputs=m,
-            len_horizon=T,
-            num_control_points=nc,
-            spline_degree=deg,
-            use_input_cost=True,
-            use_slew_rate=True,
-            saturate_states=True,
-        )
-
-        # mpc = ampc.BSplineMPC(
-        #     num_states=n,
-        #     num_inputs=m,
-        #     len_horizon=T,
-        #     num_control_points=nc,
-        #     spline_degree=deg,
-        #     knots=np.array([-6.0, -3, 0, 3, 6, 9, 12, 15]),
-        #     use_input_cost=True,
-        #     use_slew_rate=True,
-        #     saturate_states=True,
-        # )
-
-        mpc = ampc.BSplineMPC(
-            num_states=n,
-            num_inputs=m,
-            len_horizon=T,
-            num_control_points=nc,
-            spline_degree=deg,
-            knots=np.array([0.0, 3, 6, 9]),
-            use_input_cost=True,
-            use_slew_rate=True,
-            saturate_states=True,
+        n, m, T, mu = 2, 1, 10, 5
+        mpc = ampc.CondensedMPC(
+            state_dim=n,
+            input_dim=m,
+            param=ampc.Parameterization.linearInterp(
+                horizon_steps=T, num_control_points=mu
+            ),
+            opts=ampc.Options(
+                use_input_cost=True, slew_control_points=True, saturate_states=True
+            ),
         )
 
         mpc.setModelDiscrete(Ad=np.eye(n), Bd=np.ones(n), wd=np.zeros(n))
@@ -52,16 +28,18 @@ def test_bspline_mpc_interface():
         mpc.setSlewRate(u_slew=np.ones(m))
 
         mpc.setWeights(Q_diag=np.ones(n), R_diag=np.ones(m))
+        mpc.setWeights(Q_diag=np.ones(n), Qf_diag=np.ones(n), R_diag=np.ones(m))
         mpc.setStateWeights(Q_diag=np.ones(n))
-        mpc.setStateWeightsTerminal(Qf_diag=np.ones(n))
+        mpc.setStateWeights(Q_diag=np.ones(n), Qf_diag=np.ones(n))
         mpc.setInputWeights(R_diag=np.ones(m))
 
         mpc.setReferenceState(x_step=np.ones(n))
         mpc.setReferenceInput(u_step=np.ones(m))
         mpc.setReferenceStateTrajectory(x_traj=np.ones(T * n))
-        mpc.setReferenceParameterizedInputTrajectory(u_traj_ctrl_pts=np.ones(m * nc))
+        mpc.setReferenceParameterizedInputTrajectory(u_traj_ctrl_pts=np.ones(m * mu))
 
-        mpc.initializeSolver(solver_settings=None)
+        mpc.initializeSolver()
+        mpc.initializeSolver(solver_settings=ampc.OSQPSettings())
 
         mpc.solve(x0=np.zeros(n))
 
@@ -85,15 +63,15 @@ def test_bspline_mpc_interface():
         _ = mpc.getPredictedStateTrajectory(x_traj=x_traj)
         assert address == id(x_traj)
 
-        _ = mpc.num_states
-        _ = mpc.num_inputs
-        _ = mpc.len_horizon
-        _ = mpc.num_ctrl_pts
+        _ = mpc.state_dim
+        _ = mpc.input_dim
+        _ = mpc.horizon_steps
+        _ = mpc.num_control_points
 
     except:
         assert False
 
 
 if __name__ == "__main__":
-    test_bspline_mpc_interface()
+    test_implicit_mpc_interface()
     print("All tests passed!")

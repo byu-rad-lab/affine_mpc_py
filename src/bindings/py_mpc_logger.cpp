@@ -5,12 +5,14 @@
 
 #include "affine_mpc/mpc_logger.hpp"
 
-namespace affine_mpc {
+namespace affine_mpc_py {
+namespace ampc = affine_mpc;
 namespace py = pybind11;
+
 
 void moduleAddMpcLogger(py::module& m)
 {
-  py::class_<MPCLogger> log(m, "MPCLogger", R"(
+  py::class_<ampc::MPCLogger> log(m, "MPCLogger", R"(
 Utility for logging MPC solve results, trajectories, and parameters to files.
 
 Logs state, input, reference trajectories, solve times, and parameterization
@@ -18,9 +20,10 @@ metadata for later analysis and visualization. Intended for use with MPCBase
 and derived classes.
                             )");
 
-  log.def(py::init<const MPCBase* const, const std::string&>(), "Constructor",
-          py::arg("mpc"), py::arg("save_location") = "/tmp/mpc_data");
-  log.def("logPreviousSolve", &MPCLogger::logPreviousSolve,
+  log.def(py::init<const ampc::MPCBase* const, const std::string&>(),
+          "Constructor", py::arg("mpc"),
+          py::arg("save_location") = "/tmp/mpc_data");
+  log.def("logPreviousSolve", &ampc::MPCLogger::logPreviousSolve,
           R"(
 Log the results of the previous MPC solve as a single row of data in a text
 file. The data of the entire horizon is logged, not just the first input and
@@ -40,7 +43,7 @@ Args:
           py::arg("t0"), py::arg("ts"), py::arg("x0"),
           py::arg("solve_time") = -1, py::arg("write_every") = 1);
 
-  log.def("writeParamFile", &MPCLogger::writeParamFile,
+  log.def("writeParamFile", &ampc::MPCLogger::writeParamFile,
           R"(
 Write MPC parameters and metadata to a YAML file.
 
@@ -50,4 +53,4 @@ Args:
           py::arg("filename") = "params.yaml");
 }
 
-} // namespace affine_mpc
+} // namespace affine_mpc_py

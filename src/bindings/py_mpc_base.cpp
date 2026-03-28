@@ -17,50 +17,33 @@ namespace py = pybind11;
 class PyMPCBase : public ampc::MPCBase
 {
 public:
-  PyMPCBase(const int state_dim,
-            const int input_dim,
+  PyMPCBase(int state_dim,
+            int input_dim,
             const ampc::Parameterization& parameterization,
             const ampc::Options& opts,
-            const int num_design_vars,
-            const int num_custom_constraints) :
+            int num_design_vars,
+            int num_custom_constraints) :
       MPCBase(state_dim,
               input_dim,
               parameterization,
               opts,
               num_design_vars,
               num_custom_constraints)
-  // parameterization.horizon_steps
-  //     * parameterization.num_control_points,
-  // 0)
   {
     // Allow creation for unit tests. Still abstract and unusable.
   }
   ~PyMPCBase() override = default;
 
+  // define pure virtual funtions for unit testing
   void qpUpdateX0(const Eigen::Ref<const Eigen::VectorXd>& x0) override
   {
     PYBIND11_OVERLOAD_PURE(void, MPCBase, qpUpdateX0, x0);
   }
-  bool qpUpdateModel() override
-  {
-    return true; // to allow unit testing
-  }
-  bool qpUpdateReferences() override
-  {
-    return true; // to allow unit testing
-  }
-  bool qpUpdateInputLimits() override
-  {
-    return true; // to allow unit testing
-  }
-  bool qpUpdateStateLimits() override
-  {
-    return true; // to allow unit testing
-  }
-  bool qpUpdateSlewRate() override
-  {
-    return true; // to allow unit testing
-  }
+  bool qpUpdateModel() override { return true; }
+  bool qpUpdateReferences() override { return true; }
+  bool qpUpdateInputLimits() override { return true; }
+  bool qpUpdateStateLimits() override { return true; }
+  bool qpUpdateSlewRate() override { return true; }
 };
 
 void moduleAddMPCBase(py::module& m)
@@ -69,16 +52,30 @@ void moduleAddMPCBase(py::module& m)
       m, "MPCBase", "Abstract class. Not usable on its own.");
   base.def(py::init<const int, const int, const ampc::Parameterization&,
                     const ampc::Options&, const int, const int>(),
-           "Constructor", py::arg("state_dim"), py::arg("input_dim"),
-           py::arg("param"), py::arg("opts"), py::arg("num_design_vars"),
+           R"doc(
+Constructor for MPCBase.
+
+This is an abstract class and not meant to be used directly, but is still
+defined here to allow for testing and potentially to allow for users to create
+their own custom MPC classes in Python by inheriting from this class and
+implementing the pure virtual functions.
+
+Args:
+    state_dim: Dimension of state vector.
+    input_dim: Dimension of input vector.
+    parameterization: Input trajectory parameterization.
+    opts: Optional MPC configuration features to enable.
+    num_design_vars: Number of decision variables in the optimization problem.
+    num_custom_constraints: Number of custom constraints in the optimization
+        problem (beyond those implemented by MPCBase: input/state limits, slew
+        rates, and input trajectory saturation).
+           )doc",
+           py::arg("state_dim"), py::arg("input_dim"), py::arg("param"),
+           py::arg("opts"), py::arg("num_design_vars"),
            py::arg("num_custom_constraints"));
-  // base.def(py::init<const int, const int, const ampc::Parameterization&,
-  //                   const ampc::Options&>(),
-  //          "Constructor", py::arg("state_dim"), py::arg("input_dim"),
-  //          py::arg("param"), py::arg("opts"));
 
   base.def("initializeSolver", &ampc::MPCBase::initializeSolver,
-           R"(
+           R"doc(
 Initialize OSQP solver after configuring MPC setup. Calling this method after
 a successful initialization will simply return True without doing anything.
 
@@ -92,12 +89,12 @@ Args:
 
 Returns:
     success: True if initialization succeeds, false otherwise.
-           )",
+           )doc",
            py::arg("solver_settings") =
                ampc::OSQPSolver::getRecommendedSettings());
 
   base.def("solve", &ampc::MPCBase::solve,
-           R"(
+           R"doc(
 Solve optimization problem for the given initial state.
 
 Must have previously called initializeSolver() prior to calling this. Call
@@ -111,7 +108,7 @@ Returns:
     solve_status: Result indication. Generally expected to be `Success` unless
         the solver has not been initialized, then `NotInitialized`. Verify your
         problem setup and consult OSQP documentation for any other value.
-           )",
+           )doc",
            py::arg("x0"));
 
   base.def(
@@ -120,13 +117,16 @@ Returns:
         self.getNextInput(u0);
         return u0;
       },
-      R"(
+      R"doc(
 Get the next input to apply (initial input from optimized trajectory) from the
 previous solve.
 
 Args:
-    u0: Result will be stored here (essentially a return value).
-      )",
+    u0: Result will be stored here (equivalent to return value).
+
+Returns:
+    u0: Initial input from optimized trajectory (next to apply).
+      )doc",
       py::arg("u0"));
   base.def(
       "getNextInput",
@@ -135,13 +135,13 @@ Args:
         self.getNextInput(u0);
         return u0;
       },
-      R"(
+      R"doc(
 Get the next input to apply (initial input from optimized trajectory) from the
 previous solve.
 
 returns:
-    u0: initial input from optimized trajectory (next to apply).
-      )");
+    u0: Initial input from optimized trajectory (next to apply).
+      )doc");
 
   base.def(
       "getParameterizedInputTrajectory",
@@ -149,12 +149,15 @@ returns:
         self.getParameterizedInputTrajectory(u_traj_ctrl_pts);
         return u_traj_ctrl_pts;
       },
-      R"(
+      R"doc(
 Get the parameterized input trajectory (control points) from the previous solve.
 
 Args:
-    u_traj_ctrl_pts (vector): Result will be stored here (essentially a return value).
-      )",
+    u_traj_ctrl_pts (vector): Result will be stored here (equivalent to return value).
+
+returns:
+    u_traj_ctrl_pts (vector): The parameterized input trajectory.
+      )doc",
       py::arg("u_traj_ctrl_pts"));
   base.def(
       "getParameterizedInputTrajectory",
@@ -164,12 +167,12 @@ Args:
         self.getParameterizedInputTrajectory(u_traj_ctrl_pts);
         return u_traj_ctrl_pts;
       },
-      R"(
+      R"doc(
 Get the parameterized input trajectory (control points) from the previous solve.
 
 returns:
     u_traj_ctrl_pts (vector): The parameterized input trajectory.
-      )");
+      )doc");
 
   base.def(
       "getInputTrajectory",
@@ -177,12 +180,15 @@ returns:
         self.getInputTrajectory(u_traj);
         return u_traj;
       },
-      R"(
+      R"doc(
 Get the full input trajectory from the previous solve.
 
 Args:
-    u_traj (vector): Result will be stored here (essentially a return value).
-      )",
+    u_traj (vector): Result will be stored here (equivalent to return value).
+
+returns:
+    u_traj (vector): The input trajectory.
+      )doc",
       py::arg("u_traj"));
   base.def(
       "getInputTrajectory",
@@ -191,12 +197,12 @@ Args:
         self.getInputTrajectory(u_traj);
         return u_traj;
       },
-      R"(
+      R"doc(
 Get the full input trajectory from the previous solve.
 
 returns:
     u_traj (vector): The input trajectory.
-      )");
+      )doc");
 
   base.def(
       "getPredictedStateTrajectory",
@@ -204,12 +210,15 @@ returns:
         self.getPredictedStateTrajectory(x_traj);
         return x_traj;
       },
-      R"(
+      R"doc(
 Get the predicted state trajectory from the previous solve.
 
 Args:
-    x_traj (vector): Result will be stored here (essentially a return value).
-      )",
+    x_traj (vector): Result will be stored here (equivalent to return value).
+
+returns:
+    x_traj (vector): The predicted state trajectory.
+      )doc",
       py::arg("x_traj"));
   base.def(
       "getPredictedStateTrajectory",
@@ -218,12 +227,12 @@ Args:
         self.getPredictedStateTrajectory(x_traj);
         return x_traj;
       },
-      R"(
+      R"doc(
 Get the predicted state trajectory from the previous solve.
 
 returns:
     x_traj (vector): The predicted state trajectory.
-      )");
+      )doc");
 
   base.def(
       "propagateModel",
@@ -233,7 +242,7 @@ returns:
         self.propagateModel(x, u, x_next);
         return x_next;
       },
-      R"(
+      R"doc(
 Propagate the internal discrete-time model for one step.
 
 Model must be set prior to calling this method.
@@ -241,8 +250,11 @@ Model must be set prior to calling this method.
 Args:
     x: Current state vector.
     u: Current input vector.
-    x_next (out): Resulting next state vector (essentially a return value).
-      )",
+    x_next (out): Resulting next state vector (equivalent to return value).
+
+Returns:
+    x_next : Resulting next state vector.
+      )doc",
       py::arg("x"), py::arg("u"), py::arg("x_next"));
   base.def(
       "propagateModel",
@@ -252,7 +264,7 @@ Args:
         self.propagateModel(x, u, x_next);
         return x_next;
       },
-      R"(
+      R"doc(
 Propagate the internal discrete-time model for one step.
 
 Model must be set prior to calling this method.
@@ -263,11 +275,11 @@ Args:
 
 Returns:
     x_next : Resulting next state vector.
-      )",
+      )doc",
       py::arg("x"), py::arg("u"));
 
   base.def("setModelDiscrete", &ampc::MPCBase::setModelDiscrete,
-           R"(
+           R"doc(
 Set the internal discrete-time model directly from a discrete model. The model
 being `x_next = Ax + Bu + w`.
 
@@ -278,11 +290,11 @@ Args:
 
 Returns:
     success: True if the internal QP was updated properly. Unlikely to be False.
-           )",
+           )doc",
            py::arg("Ad"), py::arg("Bd"), py::arg("wd"));
   base.def("setModelContinuous2Discrete",
            &ampc::MPCBase::setModelContinuous2Discrete,
-           R"(
+           R"doc(
 Set the internal discrete-time model from a continuous-time model, which will be
 discretized. The model being `x_next = Ax + Bu + w`.
 
@@ -304,7 +316,7 @@ Args:
 
 Returns:
     success: True if the internal QP was updated properly. Unlikely to be False.
-           )",
+           )doc",
            py::arg("Ac"), py::arg("Bc"), py::arg("wc"), py::arg("dt"),
            py::arg("tol") = 1e-6);
 
@@ -314,7 +326,7 @@ Returns:
          const Eigen::Ref<const Eigen::VectorXd>& R_diag) {
         self.setWeights(Q_diag, R_diag);
       },
-      R"(
+      R"doc(
 Set state and input weights for the cost function.
 
 This method can only be called if `use_input_cost` is enabled.
@@ -322,7 +334,7 @@ This method can only be called if `use_input_cost` is enabled.
 Args:
     Q_diag: Vector for diagonal of state weight matrix (non-negative).
     R_diag: Vector for diagonal of input weight matrix (non-negative).
-      )",
+      )doc",
       py::arg("Q_diag"), py::arg("R_diag"));
   base.def(
       "setWeights",
@@ -331,7 +343,7 @@ Args:
          const Eigen::Ref<const Eigen::VectorXd>& R_diag) {
         self.setWeights(Q_diag, R_diag);
       },
-      R"(
+      R"doc(
 Set state, terminal state, and input weights for the cost function.
 
 This method can only be called if `use_input_cost` is enabled.
@@ -340,7 +352,7 @@ Args:
     Q_diag: Vector for diagonal of state weight matrix (non-negative).
     Qf_diag: Vector for diagonal of terminal state weight matrix (non-negative).
     R_diag: Vector for diagonal of input weight matrix (non-negative).
-      )",
+      )doc",
       py::arg("Q_diag"), py::arg("Qf_diag"), py::arg("R_diag"));
 
   base.def(
@@ -348,12 +360,12 @@ Args:
       [](ampc::MPCBase& self, const Eigen::Ref<const Eigen::VectorXd>& Q_diag) {
         self.setStateWeights(Q_diag);
       },
-      R"(
+      R"doc(
 Set only the state weights for the cost function.
 
 Args:
     Q_diag: Vector for diagonal of state weight matrix (non-negative).
-      )",
+      )doc",
       py::arg("Q_diag"));
   base.def(
       "setStateWeights",
@@ -361,28 +373,28 @@ Args:
          const Eigen::Ref<const Eigen::VectorXd>& Qf_diag) {
         self.setStateWeights(Q_diag, Qf_diag);
       },
-      R"(
+      R"doc(
 Set only the state and terminal state weights for the cost function.
 
 Args:
     Q_diag: Vector for diagonal of state weight matrix (non-negative).
     Qf_diag: Vector for diagonal of terminal state weight matrix (non-negative).
-      )",
+      )doc",
       py::arg("Q_diag"), py::arg("Qf_diag"));
 
   base.def("setInputWeights", &ampc::MPCBase::setInputWeights,
-           R"(
+           R"doc(
 Set only the input weights for the cost function.
 
 This method can only be called if `use_input_cost` is enabled.
 
 Args:
     R_diag: Vector for diagonal of input weight matrix (non-negative).
-           )",
+           )doc",
            py::arg("R_diag"));
 
   base.def("setReferenceState", &ampc::MPCBase::setReferenceState,
-           R"(
+           R"doc(
 Set reference state trajectory as a step command.
 
 Args:
@@ -390,12 +402,12 @@ Args:
 
 Returns:
     success: True if the internal QP was updated properly. Unlikely to be False.
-           )",
+           )doc",
            py::arg("x_step"));
 
   base.def("setReferenceStateTrajectory",
            &ampc::MPCBase::setReferenceStateTrajectory,
-           R"(
+           R"doc(
 Set reference state trajectory.
 
 Args:
@@ -406,11 +418,11 @@ Args:
 
 Returns:
     success: True if the internal QP was updated properly. Unlikely to be False.
-           )",
+           )doc",
            py::arg("x_traj"));
 
   base.def("setReferenceInput", &ampc::MPCBase::setReferenceInput,
-           R"(
+           R"doc(
 Set reference input trajectory as a step command (reference for all control
 points set to this value).
 
@@ -421,12 +433,12 @@ Args:
 
 Returns:
     success: True if the internal QP was updated properly. Unlikely to be False.
-           )",
+           )doc",
            py::arg("u_step"));
 
   base.def("setReferenceParameterizedInputTrajectory",
            &ampc::MPCBase::setReferenceParameterizedInputTrajectory,
-           R"(
+           R"doc(
 Set reference control points for the input trajectory.
 
 This method can only be called if `use_input_cost` is enabled.
@@ -439,11 +451,11 @@ Args:
 
 Returns:
     success: True if the internal QP was updated properly. Unlikely to be False.
-           )",
+           )doc",
            py::arg("u_traj_ctrl_pts"));
 
   base.def("setInputLimits", &ampc::MPCBase::setInputLimits,
-           R"(
+           R"doc(
 Set input saturation limits.
 
 This function must be called prior to `initializeSolver()`, but can also be
@@ -455,10 +467,10 @@ Args:
 
 Returns:
     success: True if the internal QP was updated properly. Unlikely to be False.
-           )",
+           )doc",
            py::arg("u_min"), py::arg("u_max"));
   base.def("setStateLimits", &ampc::MPCBase::setStateLimits,
-           R"(
+           R"doc(
 Set state saturation limits.
 
 This function can only be called if `saturate_states` is enabled. Must be
@@ -471,10 +483,10 @@ Args:
 
 Returns:
     success: True if the internal QP was updated properly. Unlikely to be False.
-           )",
+           )doc",
            py::arg("x_min"), py::arg("x_max"));
   base.def("setSlewRate", &ampc::MPCBase::setSlewRate,
-           R"(
+           R"doc(
 Set slew-rate constraint limits for control points. Control points can vary by
 up to this magnitude from one index to the next.
 
@@ -487,11 +499,11 @@ Args:
 
 Returns:
     success: True if the internal QP was updated properly. Unlikely to be False.
-           )",
+           )doc",
            py::arg("u_slew"));
 
   base.def("setSlewRateInitial", &ampc::MPCBase::setSlewRateInitial,
-           R"(
+           R"doc(
 Set initial slew-rate constraint limits for control points. Initial input can
 vary by up to this magnitude from the previous input. See `setPreviousInput()`.
 
@@ -504,11 +516,11 @@ Args:
 
 Returns:
     success: True if the internal QP was updated properly. Unlikely to be False.
-           )",
+           )doc",
            py::arg("u0_slew"));
 
   base.def("setPreviousInput", &ampc::MPCBase::setPreviousInput,
-           R"(
+           R"doc(
 Set the previous input, which is only used with the `slew_initial_input`
 constraint option. Defaults to zeros, but should be set prior to first solve if
 a different value is desired.
@@ -526,7 +538,7 @@ Args:
 
 Returns:
     success: True if the internal QP was updated properly. Unlikely to be False.
-           )",
+           )doc",
            py::arg("u_prev"));
 
   base.def_property_readonly(

@@ -12,44 +12,108 @@ namespace py = pybind11;
 
 void moduleAddMpcLogger(py::module& m)
 {
-  py::class_<ampc::MPCLogger> log(m, "MPCLogger", R"(
-Utility for logging MPC solve results, trajectories, and parameters to files.
+  py::class_<ampc::MPCLogger> log(m, "MPCLogger",
+                                  R"doc(
+High-performance binary logger for MPC data and metadata.
 
-Logs state, input, reference trajectories, solve times, and parameterization
-metadata for later analysis and visualization. Intended for use with MPCBase
-and derived classes.
-                            )");
+Uses a "write-raw, pack-later" strategy to support high logging frequencies.
+Per-step data is temporarily stored in binary files and then packed into a
+single .npz file during finalization. Metadata is stored in a .yaml file.
 
-  log.def(py::init<const ampc::MPCBase* const, const std::string&>(),
-          "Constructor", py::arg("mpc"),
-          py::arg("save_location") = "/tmp/mpc_data");
-  log.def("logPreviousSolve", &ampc::MPCLogger::logPreviousSolve,
-          R"(
-Log the results of the previous MPC solve as a single row of data in a text
-file. The data of the entire horizon is logged, not just the first input and
-state.
+The logger is designed to be used within a simulation or control loop. It
+provides a convenience method to automatically extract and stride
+trajectories from an MPC object.
+                                  )doc");
+
+  log.def(py::init<const ampc::MPCBase&, const std::filesystem::path&, double,
+                   int, bool, const std::string&>(),
+          R"doc(
+Construct an MPCLogger for a given MPC instance.
+
+The logger automatically captures a snapshot of the MPC object's current
+parameters (dimensions, weights, limits, etc.) at construction. If these
+parameters change later, captureMPCSnapshot() should be called manually.
+
+The destructor calls finalize() if it has not been manually called.
 
 Args:
-    t0: Initial time of the solve (e.g. current time at solve).
-    ts: Discretization time step.
-    x0: Initial state at the start of the horizon (e.g. current state at solve).
-    solve_time: Time taken to solve (optional). This is if you recorded the time
-        separately (likely to include setup time). The solve time reported by
-        OSQP is also logged separately.
-    write_every: Write frequency during horizon. For example, if 2, then data
-        will be written for every other time step in the horizon. However, the
-        final time step will always be written regardless of this parameter.
-          )",
-          py::arg("t0"), py::arg("ts"), py::arg("x0"),
-          py::arg("solve_time") = -1, py::arg("write_every") = 1);
+    mpc: The MPC object from which to log parameters.
+    save_dir: Directory to save log files. Created if it doesn't exist.
+    ts: Model propagation time step used to align predicted trajectories in time.
+    prediction_stride: Factor to downsample predicted trajectories.
+        - 0: Log only the current step (minimal mode).
+        - 1: Log every step of the horizon.
+        - K: Log every K-th step of the horizon.
+        Note: The terminal state (T) is always included if prediction_stride > 0.
+    log_control_points: If true, logs control points of the parameterized input
+        trajectory instead of the evaluated dense input trajectory.
+    save_name: Base name for the .npz output file (default: "log").
+          )doc",
+          py::arg("mpc"), py::arg("save_dir"), py::arg("ts"),
+          py::arg("prediction_stride") = 1,
+          py::arg("log_control_points") = false, py::arg("save_name") = "log");
+
+  log.def("logStep", &ampc::MPCLogger::logStep,
+          R"doc(
+Log a single step of data, automatically fetching trajectories and references
+from the provided MPC object with applied striding logic.
+
+Args:
+    t: Current simulation time (time of solve).
+    x0: Current state at time t (same as provided to solve() since MPCBase does
+        not store this).
+    mpc: The MPC object from which to extract predictions and references (should
+        be the same one that was provided to the constructor - providing it
+        again ensures the object still exists in memory).
+    solve_time: Optional user-calculated solve time (likely to include setup
+        time). The solve time reported by OSQP is also logged separately.
+          )doc",
+          py::arg("t"), py::arg("x0"), py::arg("mpc"),
+          py::arg("solve_time") = -1.0);
+
+  log.def("addMetadata", &ampc::MPCLogger::addMetadata,
+          R"doc(
+Add or overwrite custom metadata to be saved in both NPZ and YAML.
+
+User-added metadata is preserved in the order it was added and appears after the
+automatic MPC snapshot in the output files.
+
+Args:
+    key: Unique identifier for the metadata entry.
+    value: The value to store (int, float, string, 1D NDArray).
+    precision: Optional decimal precision for floating point output in YAML.
+        -1 uses default precision.
+          )doc",
+          py::arg("key"), py::arg("value"), py::arg("precision") = -1);
+
+  log.def("captureMPCSnapshot", &ampc::MPCLogger::captureMPCSnapshot,
+          R"doc(
+Manually capture a snapshot of an MPC object's current parameters.
+
+This is called automatically in the constructor, but can be re-called if
+weights or limits are updated during the simulation.
+
+Args:
+    mpc: The MPC object to snapshot.
+          )doc",
+          py::arg("mpc"));
+
+  log.def("finalize", &ampc::MPCLogger::finalize,
+          R"doc(
+Pack all temporary binary data into the final .npz file and write the parameter
+YAML file.
+
+This operation involves file I/O and should be called after the simulation
+loop ends. Temporary files are deleted upon successful completion.
+          )doc");
 
   log.def("writeParamFile", &ampc::MPCLogger::writeParamFile,
-          R"(
-Write MPC parameters and metadata to a YAML file.
+          R"doc(
+Write the internal metadata map to a YAML file.
 
 Args:
-    filename: Output filename for the YAML file. Should end with .yaml or .yml.
-          )",
+    filename: Output filename (should end with .yaml or .yml).
+          )doc",
           py::arg("filename") = "params.yaml");
 }
 

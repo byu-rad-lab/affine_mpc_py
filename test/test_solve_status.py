@@ -3,6 +3,7 @@ import affine_mpc as ampc
 
 def test_solve_status_interface():
     try:
+        s = ampc.SolveStatus(value=0)
         s = ampc.SolveStatus.Success
         s = ampc.SolveStatus.NotInitialized
         s = ampc.SolveStatus.SolvedInaccurate

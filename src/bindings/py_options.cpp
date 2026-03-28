@@ -10,7 +10,7 @@ namespace py = pybind11;
 
 void moduleAddOptions(py::module& m)
 {
-  py::class_<ampc::Options> opt(m, "Options", R"(
+  py::class_<ampc::Options> opt(m, "Options", R"doc(
 Controls which optional features are enabled at MPC construction time.
 
 All fields default to false. These options are immutable after constructing an
@@ -29,7 +29,7 @@ Attributes:
         parameterizations with degree > 1. This adds constraints to the
         optimiztion, but can allow control points to be outside of input limits
         while keeping inputs within limits.
-                          )");
+                          )doc");
 
   opt.def(
       py::init([](const bool use_input_cost, const bool slew_initial_input,
@@ -59,7 +59,7 @@ Args:
         parameterizations with degree > 1. This adds constraints to the
         optimiztion, but can allow control points to be outside of input limits
         while keeping inputs within limits.
-)doc",
+      )doc",
       py::arg("use_input_cost") = false, py::arg("slew_initial_input") = false,
       py::arg("slew_control_points") = false,
       py::arg("saturate_states") = false,

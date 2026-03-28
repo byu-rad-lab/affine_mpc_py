@@ -21,7 +21,6 @@ def test_osqp_settings_interface():
         settings.eps_dual_inf = 1e-4
         settings.alpha = 1.6
         settings.linsys_solver = ampc.OSQPSettings.LinsysSolverType.DirectSolver
-        settings.linsys_solver = 1
         settings.linsys_solver = settings.LinsysSolverType.IndirectSolver
         settings.linsys_solver = settings.LinsysSolverType.UnknownSolver
 

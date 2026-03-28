@@ -10,6 +10,13 @@ import plot
 
 
 def main():
+    tmp = Path(tempfile.gettempdir())
+    save_dir = tmp / "ampc_example"
+    if (save_dir / "log.npz").exists():
+        answer = input("Log file already exists. Overwrite? [Y/n] ")
+        if not answer.lower().startswith("y"):
+            print("Exiting.")
+            return
 
     msd_mpc = ampc.CondensedMPC(
         state_dim=2,
@@ -19,10 +26,6 @@ def main():
         ),
         opts=ampc.Options(use_input_cost=True),
     )
-
-    tmp = tempfile.gettempdir()
-    save_dir = os.path.join(tmp, "ampc", "example")
-    logger = ampc.MPCLogger(msd_mpc, save_dir)
 
     A = np.array([[0, 1], [-0.6, -0.1]])
     B = np.array([0, 0.2])
@@ -48,21 +51,24 @@ def main():
 
     msd_mpc.initializeSolver()
 
+    logger = ampc.MPCLogger(msd_mpc, save_dir, ts)
+
     xk = np.zeros(2)
     t = 0.0
     tf = 15.0
     while t < tf:
+        # MPC control
         start = perf_counter()
         solved = msd_mpc.solve(xk)
-        if not solved == ampc.SolveStatus.Success:
+        if solved != ampc.SolveStatus.Success:
             print("Did not solve :(")
         uk = msd_mpc.getNextInput()
         elapsed = perf_counter() - start
-        logger.logPreviousSolve(t, ts, xk, elapsed)
+        logger.logStep(t, xk, msd_mpc, elapsed)
+
+        # Simulate system
         xk = msd_mpc.propagateModel(xk, uk)
         t += ts
-
-    logger.writeParamFile()
 
 
 if __name__ == "__main__":

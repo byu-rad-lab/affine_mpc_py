@@ -6,35 +6,24 @@ import affine_mpc as ampc
 def test_bspline_mpc_interface():
     try:
         n, m, T, nc, deg = 2, 1, 10, 5, 2
+
+        mpc = ampc.SparseMPC(state_dim=n, input_dim=m, horizon_steps=T)
         mpc = ampc.SparseMPC(
-            state_dim=n,
-            input_dim=m,
-            param=ampc.Parameterization.bspline(horizon_steps=T, degree=deg,
-                                                num_control_points=nc),
-            opts=ampc.Options(use_input_cost=True,
-            slew_control_points==True,
-            saturate_states=True)
+            state_dim=n, input_dim=m, horizon_steps=T, opts=ampc.Options()
         )
 
-        # mpc = ampc.BSplineMPC(
-        #     num_states=n,
-        #     num_inputs=m,
-        #     len_horizon=T,
-        #     num_control_points=nc,
-        #     spline_degree=deg,
-        #     knots=np.array([-6.0, -3, 0, 3, 6, 9, 12, 15]),
-        #     use_input_cost=True,
-        #     use_slew_rate=True,
-        #     saturate_states=True,
-        # )
-
         mpc = ampc.SparseMPC(
             state_dim=n,
             input_dim=m,
-            param=ampc.Parameterization.bspline(horizon_steps=T, degree=deg,
-                                                active_knots=np.array([0.0, 3, 6, 9])),
-            opts=ampc.Options(use_input_cost=True, slew_control_points=True,
-                              saturate_states=True)
+            param=ampc.Parameterization.bspline(
+                horizon_steps=T, degree=deg, num_control_points=nc
+            ),
+            opts=ampc.Options(
+                use_input_cost=True,
+                slew_initial_input=True,
+                slew_control_points=True,
+                saturate_states=True,
+            ),
         )
 
         mpc.setModelDiscrete(Ad=np.eye(n), Bd=np.ones(n), wd=np.zeros(n))
@@ -46,6 +35,8 @@ def test_bspline_mpc_interface():
         mpc.setInputLimits(u_min=-np.ones(m), u_max=np.ones(m))
         mpc.setStateLimits(x_min=-np.ones(n), x_max=np.ones(n))
         mpc.setSlewRate(u_slew=np.ones(m))
+        mpc.setSlewRateInitial(u0_slew=np.ones(m))
+        mpc.setPreviousInput(u_prev=np.zeros(m))
 
         mpc.setWeights(Q_diag=np.ones(n), R_diag=np.ones(m))
         mpc.setWeights(Q_diag=np.ones(n), Qf_diag=np.ones(n), R_diag=np.ones(m))
@@ -65,23 +56,27 @@ def test_bspline_mpc_interface():
 
         u = mpc.getNextInput()
         address = id(u)
-        _ = mpc.getNextInput(u0=u)
+        out = mpc.getNextInput(u0=u)
         assert address == id(u)
+        assert address == id(out)
 
         u_ctrl_pts = mpc.getParameterizedInputTrajectory()
         address = id(u_ctrl_pts)
-        _ = mpc.getParameterizedInputTrajectory(u_traj_ctrl_pts=u_ctrl_pts)
+        out = mpc.getParameterizedInputTrajectory(u_traj_ctrl_pts=u_ctrl_pts)
         assert address == id(u_ctrl_pts)
+        assert address == id(out)
 
         u_traj = mpc.getInputTrajectory()
         address = id(u_traj)
-        _ = mpc.getInputTrajectory(u_traj=u_traj)
+        out = mpc.getInputTrajectory(u_traj=u_traj)
         assert address == id(u_traj)
+        assert address == id(out)
 
         x_traj = mpc.getPredictedStateTrajectory()
         address = id(x_traj)
-        _ = mpc.getPredictedStateTrajectory(x_traj=x_traj)
+        out = mpc.getPredictedStateTrajectory(x_traj=x_traj)
         assert address == id(x_traj)
+        assert address == id(out)
 
         _ = mpc.state_dim
         _ = mpc.input_dim

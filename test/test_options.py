@@ -3,6 +3,7 @@ import affine_mpc as ampc
 
 def test_options_interface():
     try:
+        opts = ampc.Options()
         opts = ampc.Options(use_input_cost=False)
         opts = ampc.Options(slew_initial_input=False)
         opts = ampc.Options(slew_control_points=False)

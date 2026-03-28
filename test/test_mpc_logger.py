@@ -23,7 +23,7 @@ def test_mpc_logger_interface():
         mpc.initializeSolver()
         solved = mpc.solve(x0=np.zeros(2))
 
-        logger = ampc.MPCLogger(mpc=mpc, save_location=folder)
+        logger = ampc.MPCLogger(mpc=mpc, save_dir=folder)
         logger.logPreviousSolve(
             t0=0, ts=1, x0=np.zeros(2), solve_time=-1, write_every=1
         )

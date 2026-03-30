@@ -1,8 +1,8 @@
 #include "affine_mpc_py_module.hpp"
 
-#include <pybind11/attr.h>
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
 #include <pybind11/stl/filesystem.h>
 
 #include "affine_mpc/mpc_logger.hpp"
@@ -76,8 +76,32 @@ Args:
           )doc",
           py::arg("t"), py::arg("x0"), py::arg("solve_time") = -1.0);
 
-  log.def("addMetadata", &ampc::MPCLogger::addMetadata,
-          R"doc(
+  log.def(
+      "addMetadata",
+      [](ampc::MPCLogger& self, const std::string& key, py::object value,
+         int precision) {
+        if (py::isinstance<py::bool_>(value)
+            || py::isinstance<py::int_>(value)) {
+          self.addMetadata(key, value.cast<int>(), precision);
+        } else if (py::isinstance<py::float_>(value)) {
+          self.addMetadata(key, value.cast<double>(), precision);
+        } else if (py::isinstance<py::str>(value)) {
+          self.addMetadata(key, value.cast<std::string>(), precision);
+        } else if (!py::isinstance<py::str>(value)
+                   && !py::isinstance<py::bytes>(value)
+                   && py::isinstance<py::sequence>(value)) {
+          py::array_t<double, py::array::c_style | py::array::forcecast> arr{
+              value};
+          py::array squeezed = arr.squeeze();
+          if (squeezed.ndim() != 1)
+            throw py::type_error("metadata arrays/sequences must be 1D");
+          self.addMetadata(key, py::cast<Eigen::VectorXd>(squeezed), precision);
+        } else {
+          throw py::type_error("value must be an int, float, string, or 1D "
+                               "numeric sequence/array");
+        }
+      },
+      R"doc(
 Add or overwrite custom metadata to be saved in both NPZ and YAML.
 
 User-added metadata is preserved in the order it was added and appears after the
@@ -85,11 +109,11 @@ automatic MPC snapshot in the output files.
 
 Args:
     key: Unique identifier for the metadata entry.
-    value: The value to store (int, float, string, 1D NDArray).
+    value: The value to store (int, float, string, 1D NDArray, list[float]).
     precision: Optional decimal precision for floating point output in YAML.
         -1 uses default precision.
-          )doc",
-          py::arg("key"), py::arg("value"), py::arg("precision") = -1);
+      )doc",
+      py::arg("key"), py::arg("value"), py::arg("precision") = -1);
 
   log.def("captureMPCSnapshot", &ampc::MPCLogger::captureMPCSnapshot,
           R"doc(

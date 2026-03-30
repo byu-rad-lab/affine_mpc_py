@@ -7,11 +7,11 @@ import affine_mpc as ampc
 
 
 def test_mpc_logger_interface():
-    try:
-        tmp = Path(tempfile.gettempdir())
-        folder = tmp / "test_bindings"
-        paramfile = "params.yaml"
+    tmp = Path(tempfile.gettempdir())
+    folder = tmp / "test_bindings"
+    paramfile = "params.yaml"
 
+    try:
         mpc = ampc.CondensedMPC(2, 1, ampc.Parameterization.linearInterp(10, 3))
 
         A = np.array([[0, 1], [-0.6, -0.1]])
@@ -36,7 +36,13 @@ def test_mpc_logger_interface():
             log_control_points=False,
             save_name="log",
         )
-        print("made logger")
+        logger.captureMPCSnapshot()
+        logger.addMetadata(key="test_int", value=123, precision=-1)
+        logger.addMetadata("test_str", "log_test", -1)
+        logger.addMetadata("test_float", 9.99)
+        logger.addMetadata("test_array", np.arange(5))
+        logger.addMetadata("test_list", [-1.0, 0.0, 1.0])
+        logger.addMetadata("test_seq", (-1, 0, 1))
 
         xk = np.zeros(2)
         t = 0.0
@@ -46,28 +52,25 @@ def test_mpc_logger_interface():
             solved = mpc.solve(xk)
             if solved != ampc.SolveStatus.Success:
                 print("Did not solve.")
-            else:
-                print("solved")
             uk = mpc.getNextInput()
             logger.logStep(t=t, x0=xk, solve_time=-1.0)
-            print("logged step")
 
             # Simulate system
             xk = mpc.propagateModel(xk, uk)
             t += ts
 
-        print("made logger")
         logger.logStep(t, xk)
-        print("logged step")
         logger.writeParamFile(filename="params.yaml")
-        print("wrote params")
         assert hasattr(logger, "finalize")
 
         del logger
 
         assert (folder / paramfile).exists()
         assert (folder / "log.npz").exists()
-        # os.remove(folder)
+
+        os.remove(folder / paramfile)
+        os.remove(folder / "log.npz")
+        os.rmdir(folder)
 
     except:
         assert False

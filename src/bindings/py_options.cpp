@@ -64,6 +64,7 @@ Args:
       py::arg("slew_control_points") = false,
       py::arg("saturate_states") = false,
       py::arg("saturate_input_trajectory") = false);
+
   opt.def_readwrite("use_input_cost", &ampc::Options::use_input_cost);
   opt.def_readwrite("slew_initial_input", &ampc::Options::slew_initial_input);
   opt.def_readwrite("slew_control_points", &ampc::Options::slew_control_points);

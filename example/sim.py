@@ -64,7 +64,7 @@ def main():
             print("Did not solve :(")
         uk = msd_mpc.getNextInput()
         elapsed = perf_counter() - start
-        logger.logStep(t, xk, msd_mpc, elapsed)
+        logger.logStep(t, xk, elapsed)
 
         # Simulate system
         xk = msd_mpc.propagateModel(xk, uk)

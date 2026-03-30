@@ -1,7 +1,9 @@
 #include "affine_mpc_py_module.hpp"
 
+#include <pybind11/attr.h>
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/stl/filesystem.h>
 
 #include "affine_mpc/mpc_logger.hpp"
 
@@ -19,16 +21,22 @@ High-performance binary logger for MPC data and metadata.
 Uses a "write-raw, pack-later" strategy to support high logging frequencies.
 Per-step data is temporarily stored in binary files and then packed into a
 single .npz file during finalization. Metadata is stored in a .yaml file.
+Everything in the YAML file is also contained in the NPZ file, but the YAML
+provides a quick and easy way to see parameters from a simulation.
 
 The logger is designed to be used within a simulation or control loop. It
 provides a convenience method to automatically extract and stride
 trajectories from an MPC object.
                                   )doc");
 
-  log.def(py::init<const ampc::MPCBase&, const std::filesystem::path&, double,
-                   int, bool, const std::string&>(),
+  log.def(py::init<const ampc::MPCBase* const, const std::filesystem::path&,
+                   double, int, bool, const std::string&>(),
           R"doc(
-Construct an MPCLogger for a given MPC instance.
+Construct an MPCLogger for a given MPC instance; the logger is linked to this
+single MPC instance.
+
+IMPORTANT: The logger does not own the MPC object; the MPC instance must outlive
+the logger.
 
 The logger automatically captures a snapshot of the MPC object's current
 parameters (dimensions, weights, limits, etc.) at construction. If these
@@ -51,7 +59,8 @@ Args:
           )doc",
           py::arg("mpc"), py::arg("save_dir"), py::arg("ts"),
           py::arg("prediction_stride") = 1,
-          py::arg("log_control_points") = false, py::arg("save_name") = "log");
+          py::arg("log_control_points") = false, py::arg("save_name") = "log",
+          py::keep_alive<1, 2>());
 
   log.def("logStep", &ampc::MPCLogger::logStep,
           R"doc(
@@ -62,14 +71,10 @@ Args:
     t: Current simulation time (time of solve).
     x0: Current state at time t (same as provided to solve() since MPCBase does
         not store this).
-    mpc: The MPC object from which to extract predictions and references (should
-        be the same one that was provided to the constructor - providing it
-        again ensures the object still exists in memory).
     solve_time: Optional user-calculated solve time (likely to include setup
         time). The solve time reported by OSQP is also logged separately.
           )doc",
-          py::arg("t"), py::arg("x0"), py::arg("mpc"),
-          py::arg("solve_time") = -1.0);
+          py::arg("t"), py::arg("x0"), py::arg("solve_time") = -1.0);
 
   log.def("addMetadata", &ampc::MPCLogger::addMetadata,
           R"doc(
@@ -92,11 +97,7 @@ Manually capture a snapshot of an MPC object's current parameters.
 
 This is called automatically in the constructor, but can be re-called if
 weights or limits are updated during the simulation.
-
-Args:
-    mpc: The MPC object to snapshot.
-          )doc",
-          py::arg("mpc"));
+          )doc");
 
   log.def("finalize", &ampc::MPCLogger::finalize,
           R"doc(

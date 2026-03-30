@@ -1,36 +1,74 @@
 import numpy as np
 import os
+import tempfile
+from pathlib import Path
 
 import affine_mpc as ampc
 
 
 def test_mpc_logger_interface():
     try:
-        folder = "/tmp/test_bindings/"
+        tmp = Path(tempfile.gettempdir())
+        folder = tmp / "test_bindings"
         paramfile = "params.yaml"
 
-        mpc = ampc.CondensedMPC(
-            state_dim=2,
-            input_dim=1,
-            param=ampc.Parameterization.linearInterp(
-                horizon_steps=10, num_control_points=5
-            ),
-        )
-        mpc.setModelContinuous2Discrete(
-            Ac=np.eye(2), Bc=np.ones(2), wc=np.zeros(2), dt=0.1
-        )
-        mpc.setInputLimits(u_min=-np.ones(1), u_max=np.ones(1))
+        mpc = ampc.CondensedMPC(2, 1, ampc.Parameterization.linearInterp(10, 3))
+
+        A = np.array([[0, 1], [-0.6, -0.1]])
+        B = np.array([0, 0.2])
+        w = np.zeros(2)
+        ts = 0.1
+        mpc.setModelContinuous2Discrete(A, B, w, ts)
+        u_min = np.zeros(1)
+        u_max = np.ones(1) * 3
+        mpc.setInputLimits(u_min, u_max)
+        Q_diag = np.array([1, 0.1])
+        mpc.setStateWeights(Q_diag)
+        x_goal = np.array([1.0, 0])
+        mpc.setReferenceState(x_goal)
         mpc.initializeSolver()
-        solved = mpc.solve(x0=np.zeros(2))
 
-        logger = ampc.MPCLogger(mpc=mpc, save_dir=folder)
-        logger.logPreviousSolve(
-            t0=0, ts=1, x0=np.zeros(2), solve_time=-1, write_every=1
+        logger = ampc.MPCLogger(
+            mpc=mpc,
+            save_dir=folder,
+            ts=ts,
+            prediction_stride=1,
+            log_control_points=False,
+            save_name="log",
         )
-        logger.logPreviousSolve(t0=1, ts=1, x0=np.ones(2))
-        logger.writeParamFile(filename="params.yaml")
+        print("made logger")
 
-        assert os.path.exists(folder + paramfile)
+        xk = np.zeros(2)
+        t = 0.0
+        tf = 1.0
+        while t < tf:
+            # MPC control
+            solved = mpc.solve(xk)
+            if solved != ampc.SolveStatus.Success:
+                print("Did not solve.")
+            else:
+                print("solved")
+            uk = mpc.getNextInput()
+            logger.logStep(t=t, x0=xk, solve_time=-1.0)
+            print("logged step")
+
+            # Simulate system
+            xk = mpc.propagateModel(xk, uk)
+            t += ts
+
+        print("made logger")
+        logger.logStep(t, xk)
+        print("logged step")
+        logger.writeParamFile(filename="params.yaml")
+        print("wrote params")
+        assert hasattr(logger, "finalize")
+
+        del logger
+
+        assert (folder / paramfile).exists()
+        assert (folder / "log.npz").exists()
+        # os.remove(folder)
+
     except:
         assert False
 

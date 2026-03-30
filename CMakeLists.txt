@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.28)
 project(affine_mpc_py LANGUAGES CXX)
 
 # Stub files provide IDE support (signature help) for compiled bindings
-option(GENERATE_STUBS "Generate stub files for compiled bindings" OFF)
+option(GENERATE_STUBS "Generate stub files for compiled bindings" ON)
 
 # -----------------------------------------
 # Dependencies

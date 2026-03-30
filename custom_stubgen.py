@@ -40,7 +40,7 @@ pybind11_stubgen.main(
 )
 
 stub_file = stub_dir / pkg / "_bindings.pyi"
-repo_stub_file = Path(__file__).parent / pkg / "_bindings.pyi"
+repo_stub_file = Path(__file__).parent / "src" / pkg / "_bindings.pyi"
 
 if debug:
     print("exists:", stub_dir.exists())
@@ -66,6 +66,13 @@ content = re.sub(r"from __future__ import annotations", "", content)
 #     content,
 #     count=1,
 # )
+content = re.sub(
+    r"import typing",
+    "import typing\nimport os",
+    content,
+    count=1,
+)
+content = re.sub("PathLike ", "PathLike[str] ", content)
 # content = re.sub("typing.SupportsInt . typing.SupportsIndex", "int", content)
 content = re.sub(" . typing.SupportsIndex", "", content)
 content = re.sub("typing.SupportsInt", "int", content)
@@ -89,8 +96,8 @@ except ImportError:
     print("black not found!")
     formatted = content
 
-# with open(stub_file, "w", encoding="utf-8") as f:
-#     f.write(formatted)
-
-with open(repo_stub_file, "w", encoding="utf-8") as f:
+with open(stub_file, "w", encoding="utf-8") as f:
     f.write(formatted)
+
+# with open(repo_stub_file, "w", encoding="utf-8") as f:
+#     f.write(formatted)

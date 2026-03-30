@@ -8,8 +8,6 @@ name = "affine_mpc"
 dynamic = ["version"]
 dependencies = [
     "numpy",
-    "matplotlib",
-    "abracatabra[qt-pyside6]"
 ]
 authors = [
     {name="Mathew Haskell", email="mhaskell9@gmail.com"}
@@ -22,14 +20,20 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
-    "Private :: Do Not Upload",
+    # "Private :: Do Not Upload",
 ]
 keywords = ["affine mpc", "mpc", "model predictive control"]
 
-# Install these with `pip install .[dev]`
 [project.optional-dependencies]
+# Install these with `pip install ".[dev]"`
 dev = [
+    "black",
     "pytest",
+]
+# Install these with `pip install ".[example]"`
+example = [
+    "matbplotlib",
+    "abracatabra[qt-pyside6]",
 ]
 
 # see https://scikit-build-core.readthedocs.io/en/latest/#configuration for 

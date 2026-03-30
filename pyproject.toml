@@ -32,7 +32,7 @@ dev = [
 ]
 # Install these with `pip install ".[example]"`
 example = [
-    "matbplotlib",
+    "matplotlib",
     "abracatabra[qt-pyside6]",
 ]
 

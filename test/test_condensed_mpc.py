@@ -3,6 +3,12 @@ import numpy as np
 import affine_mpc as ampc
 
 
+def verify_same_data(a, b):
+    # modify in place
+    a += 1
+    assert np.all(a == b)
+
+
 def test_implicit_mpc_interface():
     try:
         n, m, T, nc = 2, 1, 10, 5
@@ -58,25 +64,26 @@ def test_implicit_mpc_interface():
         address = id(u)
         out = mpc.getNextInput(u0=u)
         assert address == id(u)
-        assert address == id(out)
+        # can't test address of out, it is a different reference to same data
+        verify_same_data(out, u)
 
         u_ctrl_pts = mpc.getParameterizedInputTrajectory()
         address = id(u_ctrl_pts)
         out = mpc.getParameterizedInputTrajectory(u_traj_ctrl_pts=u_ctrl_pts)
         assert address == id(u_ctrl_pts)
-        assert address == id(out)
+        verify_same_data(out, u_ctrl_pts)
 
         u_traj = mpc.getInputTrajectory()
         address = id(u_traj)
         out = mpc.getInputTrajectory(u_traj=u_traj)
         assert address == id(u_traj)
-        assert address == id(out)
+        verify_same_data(out, u_traj)
 
         x_traj = mpc.getPredictedStateTrajectory()
         address = id(x_traj)
         out = mpc.getPredictedStateTrajectory(x_traj=x_traj)
         assert address == id(x_traj)
-        assert address == id(out)
+        verify_same_data(out, x_traj)
 
         _ = mpc.state_dim
         _ = mpc.input_dim

@@ -1,11 +1,13 @@
-import tempfile
-import os
+# std lib
 from pathlib import Path
+import tempfile
 from time import perf_counter
 
+# 3rd party
 import numpy as np
-import affine_mpc as ampc
 
+# local
+import affine_mpc as ampc
 import plot_sim
 
 

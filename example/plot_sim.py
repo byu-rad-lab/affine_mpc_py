@@ -1,9 +1,12 @@
+# std lib
+from pathlib import Path
+import tempfile
+
+# 3rd party
 import numpy as np
 from numpy.typing import NDArray
 import abracatabra as plt
 from matplotlib.axes import Axes
-from pathlib import Path
-import tempfile
 
 ArrayF = NDArray[np.float64]
 

@@ -3,7 +3,7 @@ find_package(Python3 COMPONENTS Interpreter Development.Module REQUIRED)
 
 # cmake 3.27 allows for new way to import Python/Pybind11
 # before 3.27, set PYBIND11_FINDPYTHON to ON
-set(PYBIND11_FINDPYTHON OFF)
+set(PYBIND11_FINDPYTHON ON)
 find_package(pybind11 CONFIG QUIET)
 
 if(NOT TARGET pybind11::module)

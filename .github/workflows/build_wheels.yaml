@@ -9,6 +9,8 @@ on:
 # env:
 #   # Only build stable Python versions
 #   CIBW_BUILD: "cp310-* cp311-* cp312-*"
+env:
+  CIBW_ARCHS_WINDOWS: AMD64
 
 jobs:
   build-wheels:
@@ -88,17 +90,10 @@ jobs:
       - name: Build wheels (Windows)
         if: runner.os == 'Windows'
         env:
-          # CIBW_ENVIRONMENT: "CMAKE_ARGS=-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DPYTHON_EXECUTABLE=${env:pythonLocation} -DPython3_ROOT_DIR=${env:pythonLocation}"
           CIBW_ENVIRONMENT: |
             CMAKE_ARGS=-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
         run: |
-          # set CMAKE_ARGS=-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
-          #
-          # $env:CMAKE_ARGS = "-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
-          # cibuildwheel --output-dir wheelhouse
-          #
-          # $env:CMAKE_ARGS = "-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DPython3_ROOT_DIR=${env:pythonLocation}"
-          $env:CMAKE_ARGS = "-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DPYTHON_EXECUTABLE=${env:pythonLocation} -DPython3_ROOT_DIR=${env:pythonLocation}"
+          $env:CMAKE_ARGS = "-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
           cibuildwheel --output-dir wheelhouse
 
       - name: Build wheels (macOS)

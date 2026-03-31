@@ -6,14 +6,16 @@ from time import perf_counter
 import numpy as np
 import affine_mpc as ampc
 
-import plot
+import plot_sim
 
 
 def main():
     tmp = Path(tempfile.gettempdir())
     save_dir = tmp / "ampc_example"
     if (save_dir / "log.npz").exists():
-        answer = input("Log file already exists. Overwrite? [Y/n] ")
+        answer = input("Log file already exists. Overwrite? [Y/n]: ")
+        if len(answer) == 0:
+            answer = "y"
         if not answer.lower().startswith("y"):
             print("Exiting.")
             return
@@ -70,7 +72,9 @@ def main():
         xk = msd_mpc.propagateModel(xk, uk)
         t += ts
 
+    print("Log file written to", save_dir / "log.npz")
+
 
 if __name__ == "__main__":
     main()
-    plot.main()
+    plot_sim.main()

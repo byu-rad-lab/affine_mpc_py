@@ -4,8 +4,8 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "affine_mpc"
-# version = "1.0.0"
-dynamic = ["version"]
+version = "0.0.0"
+# dynamic = ["version"]
 dependencies = [
     "numpy",
 ]

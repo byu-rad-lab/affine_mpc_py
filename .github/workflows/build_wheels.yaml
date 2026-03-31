@@ -26,18 +26,40 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install system dependencies
+      # - name: Install system dependencies
+      #   run: |
+      #     if [[ "${{ runner.os }}" == "Linux" ]]; then
+      #       sudo apt-get update
+      #       sudo apt-get install -y cmake build-essential zlib1g-dev libeigen3-dev
+      #     elif [[ "${{ runner.os }}" == "Windows" ]]; then
+      #       choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
+      #       choco install zlib eigen -y
+      #     elif [[ "${{ runner.os }}" == "macOS" ]]; then
+      #       brew update
+      #       brew install cmake zlib eigen
+      #     fi
+
+      # Linux step
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
         run: |
-          if [[ "${{ runner.os }}" == "Linux" ]]; then
-            sudo apt-get update
-            sudo apt-get install -y cmake build-essential zlib1g-dev libeigen3-dev
-          elif [[ "${{ runner.os }}" == "Windows" ]]; then
-            choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
-            choco install zlib eigen -y
-          elif [[ "${{ runner.os }}" == "macOS" ]]; then
-            brew update
-            brew install cmake zlib eigen
-          fi
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential zlib1g-dev libeigen3-dev
+
+      # Windows step
+      - name: Install Windows dependencies
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
+          choco install zlib eigen -y
+
+      # macOS step
+      - name: Install macOS dependencies
+        if: runner.os == 'macOS'
+        run: |
+          brew update
+          brew install cmake zlib eigen
 
       - name: Install cibuildwheel
         run: pip install cibuildwheel

@@ -82,7 +82,7 @@ jobs:
         run: |
           # set CMAKE_ARGS=-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
           $env:CMAKE_ARGS = "-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
-          cibuildwheel --output-dir wheelhouse --print-build-identifiers
+          cibuildwheel --output-dir wheelhouse
 
       - name: Build wheels
         if: runner.os != 'Windows'
@@ -121,3 +121,4 @@ jobs:
           user: __token__
           password: ${{ secrets.TEST_PYPI_API_TOKEN }}
           repository_url: https://test.pypi.org/legacy/
+          packages_dir: wheelhouse

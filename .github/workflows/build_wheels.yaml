@@ -81,7 +81,11 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           # set CMAKE_ARGS=-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
-          $env:CMAKE_ARGS = "-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
+          #
+          # $env:CMAKE_ARGS = "-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
+          # cibuildwheel --output-dir wheelhouse
+          #
+          $env:CMAKE_ARGS = "-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DPython3_ROOT_DIR=${env:pythonLocation}"
           cibuildwheel --output-dir wheelhouse
 
       - name: Build wheels

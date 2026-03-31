@@ -6,6 +6,10 @@ on:
       - "*"
   workflow_dispatch:
 
+# env:
+#   # Only build stable Python versions
+#   CIBW_BUILD: "cp310-* cp311-* cp312-*"
+
 jobs:
   build-wheels:
     runs-on: ${{ matrix.os }}
@@ -21,6 +25,19 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+
+      - name: Install system dependencies
+        run: |
+          if [[ "${{ runner.os }}" == "Linux" ]]; then
+            sudo apt-get update
+            sudo apt-get install -y cmake build-essential zlib1g-dev libeigen3-dev
+          elif [[ "${{ runner.os }}" == "Windows" ]]; then
+            choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
+            choco install zlib eigen -y
+          elif [[ "${{ runner.os }}" == "macOS" ]]; then
+            brew update
+            brew install cmake zlib eigen
+          fi
 
       - name: Install cibuildwheel
         run: pip install cibuildwheel

@@ -10,6 +10,11 @@ option(GENERATE_STUBS "Generate stub files for compiled bindings" ON)
 # -----------------------------------------
 # Dependencies
 # -----------------------------------------
+# Use the vcpkg toolchain file if defined (for the Github workflow)
+if(DEFINED ENV{VCPKG_TOOLCHAIN_FILE})
+    set(CMAKE_TOOLCHAIN_FILE $ENV{VCPKG_TOOLCHAIN_FILE} CACHE STRING "")
+endif()
+
 include(FetchContent)
 include(cmake/extern_pybind11.cmake)
 include(cmake/extern_ampc.cmake)

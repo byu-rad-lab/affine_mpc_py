@@ -50,9 +50,21 @@ jobs:
       - name: Install Windows dependencies
         if: runner.os == 'Windows'
         shell: pwsh
+        # run: |
+        #   choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
+        #   choco install zlib eigen -y
         run: |
-          choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
-          choco install zlib eigen -y
+          # Clone vcpkg
+          git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
+
+          # Bootstrap vcpkg
+          C:\vcpkg\bootstrap-vcpkg.bat
+
+          # Install required packages (zlib + Eigen)
+          C:\vcpkg\vcpkg install zlib:x64-windows eigen3:x64-windows
+
+          # Export the toolchain file path as an environment variable
+          echo "##vso[task.setvariable variable=VCPKG_TOOLCHAIN_FILE]C:\vcpkg\scripts\buildsystems\vcpkg.cmake"
 
       # macOS step
       - name: Install macOS dependencies

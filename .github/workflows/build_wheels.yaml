@@ -77,7 +77,7 @@ jobs:
         run: pip install cibuildwheel
 
       - name: Build wheels (Linux)
-        if: runner.os == 'Windows'
+        if: runner.os == 'Linux'
         run: |
           export CMAKE_ARGS="-DEigen3_INCLUDE_DIR=/usr/include/eigen3"
           cibuildwheel --output-dir wheelhouse

@@ -64,7 +64,7 @@ jobs:
           C:\vcpkg\vcpkg install zlib:x64-windows eigen3:x64-windows
 
           # Export the toolchain file path as an environment variable
-          echo "##vso[task.setvariable variable=VCPKG_TOOLCHAIN_FILE]C:\vcpkg\scripts\buildsystems\vcpkg.cmake"
+          # echo "##vso[task.setvariable variable=VCPKG_TOOLCHAIN_FILE]C:\vcpkg\scripts\buildsystems\vcpkg.cmake"
 
       # macOS step
       - name: Install macOS dependencies
@@ -80,14 +80,26 @@ jobs:
       - name: Build wheels (Windows)
         if: runner.os == 'Windows'
         run: |
-          set CMAKE_ARGS=-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
+          # set CMAKE_ARGS=-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
+          $env:CMAKE_ARGS = "-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
           cibuildwheel --output-dir wheelhouse --print-build-identifiers
 
       - name: Build wheels
         if: runner.os != 'Windows'
         run: cibuildwheel --output-dir wheelhouse
 
+      - name: List built wheels (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          if (Test-Path wheelhouse) {
+              ls wheelhouse
+          } else {
+              Write-Host "wheelhouse folder does not exist yet."
+          }
+
       - name: List built wheels
+        if: runner.os != 'Windows'
         run: ls -l wheelhouse
 
       - name: Upload built wheels as artifact

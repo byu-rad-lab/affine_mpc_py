@@ -40,14 +40,14 @@ jobs:
       #     fi
 
       # Linux step
-      - name: Install Linux dependencies
+      - name: Install dependencies (Linux)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake build-essential zlib1g-dev libeigen3-dev
 
       # Windows step
-      - name: Install Windows dependencies
+      - name: Install dependencies (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         # run: |
@@ -67,7 +67,7 @@ jobs:
           # echo "##vso[task.setvariable variable=VCPKG_TOOLCHAIN_FILE]C:\vcpkg\scripts\buildsystems\vcpkg.cmake"
 
       # macOS step
-      - name: Install macOS dependencies
+      - name: Install dependencies (macOS)
         if: runner.os == 'macOS'
         run: |
           brew update
@@ -75,7 +75,12 @@ jobs:
 
       - name: Install cibuildwheel
         run: pip install cibuildwheel
-        # run: pip install cibuildwheel==2.5.0
+
+      - name: Build wheels (Linux)
+        if: runner.os == 'Windows'
+        run: |
+          export CMAKE_ARGS="-DEigen3_INCLUDE_DIR=/usr/include/eigen3"
+          cibuildwheel --output-dir wheelhouse
 
       - name: Build wheels (Windows)
         if: runner.os == 'Windows'
@@ -85,11 +90,12 @@ jobs:
           # $env:CMAKE_ARGS = "-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
           # cibuildwheel --output-dir wheelhouse
           #
-          $env:CMAKE_ARGS = "-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DPython3_ROOT_DIR=${env:pythonLocation}"
+          # $env:CMAKE_ARGS = "-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DPython3_ROOT_DIR=${env:pythonLocation}"
+          $env:CMAKE_ARGS = "-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DPYTHON_EXECUTABLE=${env:pythonLocation} -DPython3_ROOT_DIR=${env:pythonLocation}"
           cibuildwheel --output-dir wheelhouse
 
-      - name: Build wheels
-        if: runner.os != 'Windows'
+      - name: Build wheels (macOS)
+        if: runner.os == 'macOS'
         run: cibuildwheel --output-dir wheelhouse
 
       - name: List built wheels (Windows)
@@ -102,7 +108,7 @@ jobs:
               Write-Host "wheelhouse folder does not exist yet."
           }
 
-      - name: List built wheels
+      - name: List built wheels (Linux/macOS)
         if: runner.os != 'Windows'
         run: ls -l wheelhouse
 

@@ -6,11 +6,18 @@ on:
       - "*"
   workflow_dispatch:
 
-# env:
-#   # Only build stable Python versions
-#   CIBW_BUILD: "cp310-* cp311-* cp312-*"
 env:
+  CIBW_BUILD: "cp310-* cp311-* cp312-* cp313-* cp314-*"
+  CIBW_SKIP: "pp* cp3??t-* *-win32 *-manylinux_i686 *-musllinux_i686"
   CIBW_ARCHS_WINDOWS: AMD64
+  CIBW_TEST_REQUIRES: pytest
+  CIBW_TEST_COMMAND: "python -m pytest {project}/test/test_options.py"
+  CIBW_ENVIRONMENT_LINUX: >-
+    CMAKE_ARGS=-DEigen3_INCLUDE_DIR=/usr/include/eigen3
+  CIBW_ENVIRONMENT_WINDOWS: >-
+    CMAKE_ARGS=-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
+  CIBW_BEFORE_ALL_LINUX: >-
+    yum install -y eigen3-devel
 
 jobs:
   build-wheels:
@@ -40,13 +47,6 @@ jobs:
       #       brew update
       #       brew install cmake zlib eigen
       #     fi
-
-      # Linux step
-      - name: Install dependencies (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake build-essential zlib1g-dev libeigen3-dev
 
       # Windows step
       - name: Install dependencies (Windows)
@@ -80,21 +80,11 @@ jobs:
 
       - name: Build wheels (Linux)
         if: runner.os == 'Linux'
-        env:
-          CIBW_ENVIRONMENT: "CMAKE_ARGS=-DEigen3_INCLUDE_DIR=/usr/include/eigen3"
-
-        run: |
-          export CMAKE_ARGS="-DEigen3_INCLUDE_DIR=/usr/include/eigen3"
-          cibuildwheel --output-dir wheelhouse
+        run: cibuildwheel --output-dir wheelhouse
 
       - name: Build wheels (Windows)
         if: runner.os == 'Windows'
-        env:
-          CIBW_ENVIRONMENT: |
-            CMAKE_ARGS=-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
-        run: |
-          $env:CMAKE_ARGS = "-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
-          cibuildwheel --output-dir wheelhouse
+        run: cibuildwheel --output-dir wheelhouse
 
       - name: Build wheels (macOS)
         if: runner.os == 'macOS'

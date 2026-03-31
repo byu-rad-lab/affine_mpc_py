@@ -77,7 +77,14 @@ jobs:
         run: pip install cibuildwheel
         # run: pip install cibuildwheel==2.5.0
 
+      - name: Build wheels (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          set CMAKE_ARGS=-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
+          cibuildwheel --output-dir wheelhouse --print-build-identifiers
+
       - name: Build wheels
+        if: runner.os != 'Windows'
         run: cibuildwheel --output-dir wheelhouse
 
       - name: List built wheels

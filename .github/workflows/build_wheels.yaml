@@ -12,9 +12,15 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
+
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
       - name: Install cibuildwheel
         run: pip install cibuildwheel
@@ -27,9 +33,9 @@ jobs:
         run: ls -l wheelhouse
 
       - name: Upload built wheels as artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: python-wheels
+          name: python-wheels-${{ matrix.os }}
           path: wheelhouse/*.whl
 
       # - name: Publish to PyPI
@@ -39,6 +45,7 @@ jobs:
       #     password: ${{ secrets.PYPI_API_TOKEN }}
 
       - name: Publish wheels to TestPyPI
+        if: matrix.os == 'ubuntu-latest'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__

@@ -78,12 +78,16 @@ jobs:
 
       - name: Build wheels (Linux)
         if: runner.os == 'Linux'
+        env:
+          CIBW_ENVIRONMENT: "CMAKE_ARGS=-DEigen3_INCLUDE_DIR=/usr/include/eigen3"
         run: |
           export CMAKE_ARGS="-DEigen3_INCLUDE_DIR=/usr/include/eigen3"
           cibuildwheel --output-dir wheelhouse
 
       - name: Build wheels (Windows)
         if: runner.os == 'Windows'
+        env:
+          CIBW_ENVIRONMENT: "CMAKE_ARGS=-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DPYTHON_EXECUTABLE=${env:pythonLocation} -DPython3_ROOT_DIR=${env:pythonLocation}"
         run: |
           # set CMAKE_ARGS=-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
           #

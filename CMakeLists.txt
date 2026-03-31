@@ -85,11 +85,15 @@ if(${GENERATE_STUBS})
   # Path to custom stub generation script
   set(GEN_STUBS "${CMAKE_CURRENT_SOURCE_DIR}/custom_stubgen.py")
 
+  # Collect package Python files explicitly since wildcard expansion in
+  # add_custom_command COMMAND arguments is not portable, especially on Windows.
+  file(GLOB AFFINE_MPC_PY_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/affine_mpc/*.py")
+
   # Post-build command to copy generate stubs
   add_custom_command(TARGET _bindings POST_BUILD
     # need __init__.py for package recognition (and everything it references)
     COMMAND ${CMAKE_COMMAND} -E copy
-      ${CMAKE_CURRENT_SOURCE_DIR}/src/affine_mpc/*.py
+      ${AFFINE_MPC_PY_FILES}
       ${CMAKE_CURRENT_BINARY_DIR}/affine_mpc/.
 
     # generate stubs

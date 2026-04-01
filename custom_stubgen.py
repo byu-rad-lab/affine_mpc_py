@@ -96,8 +96,10 @@ except ImportError:
     print("black not found!")
     formatted = content
 
-with open(stub_file, "w", encoding="utf-8") as f:
-    f.write(formatted)
-
-# with open(repo_stub_file, "w", encoding="utf-8") as f:
+## put stub file in build folder and install it
+# with open(stub_file, "w", encoding="utf-8") as f:
 #     f.write(formatted)
+
+## put stub file in repo and commit it
+with open(repo_stub_file, "w", encoding="utf-8") as f:
+    f.write(formatted)

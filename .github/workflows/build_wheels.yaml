@@ -12,8 +12,10 @@ env:
   CIBW_ARCHS_WINDOWS: AMD64
   CIBW_TEST_REQUIRES: pytest
   CIBW_TEST_COMMAND: "python -m pytest {project}/test/test_options.py"
+  CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
   CIBW_ENVIRONMENT_WINDOWS: >-
     CMAKE_ARGS=-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
+  CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair -w {dest_dir} {wheel}"
 
 jobs:
   check-stubs:
